@@ -1,22 +1,29 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# --- Segredos e Variáveis de Ambiente ---
+# Arquivos que contém senhas, chaves de API e tokens
+.env
+.env.*
+.zshrc.local
+
+# --- Performance e Compilação ---
+# Binários gerados pelo zcompile
+*.zwc
+
+# Cache de plugins e autocompletar
+.zcompdump*
+zsh_plugins_init.zsh
+
+# --- Backup e Temporários ---
+# Gerados pelas funções 'sedi', 'bk' e pelo sistema
+*.bak
+*.bak.*
+*.tmp
+
+# --- Logs e Histórico ---
+# Evita subir o seu histórico pessoal de comandos
+.zsh_history
+*.log
+
+# --- IDE e Sistema ---
 .vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-file
-*.flf
-#Test results file
-TestResults.xml
+.DS_Store
+Thumbs.db
