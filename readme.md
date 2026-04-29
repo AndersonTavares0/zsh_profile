@@ -41,8 +41,9 @@ Configuração do Zsh otimizada para Fedora Linux, com foco em performance, segu
 - **Boot Timer**: Monitoramento do tempo de inicialização do shell
 - **Aliases Produtivos**: Comandos simplificados para navegação e listagem de arquivos
 - **Funções Utilitárias**: Ferramentas para Git, arquivos, backup e gerenciamento de sistema
-- **Segurança no Histórico**: Filtragem automática de credenciais sensíveis
+- **Segurança no Histórico**: Filtragem automática case-insensitive de credenciais sensíveis
 - **Lazy Loading**: Carregamento diferido de plugins pesados (opcional)
+- **Histórico Robusto**: 50.000 entradas compartilhadas entre sessões
 
 ## Compatibilidade
 
@@ -115,14 +116,13 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-$HO
 
 ### Navegação
 
-| Alias | Ação |
+| Alias/Função | Ação |
 |-------|------|
 | `home` | `cd ~` — Vai para a home |
 | `docs` | `cd ~/Documents` — Vai para Documentos |
-| `up` | `cd ..` — Sobe 1 nível |
-| `up2` | `cd ../..` — Sobe 2 níveis |
-| `up3` | `cd ../../..` — Sobe 3 níveis |
-| `up4` | `cd ../../../..` — Sobe 4 níveis |
+| `dtop` | `cd ~/Desktop` — Vai para a Área de Trabalho |
+| `reload` | Recarrega o `.zshrc` |
+| `up [n]` | Sobe `n` níveis (padrão: 1). Ex: `up 3` |
 
 ### Limpeza do Sistema (Fedora)
 
@@ -145,7 +145,7 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-$HO
 ### Navegação e Arquivos
 
 #### `dtop`
-Navega para `~/Desktop`.
+Navega para `~/Desktop` (alias).
 ```bash
 dtop
 ```
@@ -217,7 +217,7 @@ extract projeto.tar.gz
 extract backup.zip
 extract arquivo.rar
 ```
-Formatos suportados: `.tar.bz2`, `.tgz`, `.tar.xz`, `.bz2`, `.gz`, `.tar`, `.zip`, `.rar`, `.7z`
+Formatos suportados: `.tar.bz2`, `.tgz`, `.tar.xz`, `.tar.zst`, `.bz2`, `.gz`, `.xz`, `.zst`, `.tar`, `.zip`, `.rar`, `.7z`
 
 #### `bk <arquivo>`
 Cria backup de um arquivo.
@@ -249,7 +249,7 @@ zshrc-time
 ### Sistema de Cache
 
 O cache de plugins é gerado automaticamente e reconstruído apenas quando:
-- O fingerprint das ferramentas monitoradas muda (`zoxide`, `eza`, `fzf`)
+- O fingerprint das ferramentas monitoradas muda (`zoxide`, `fzf`)
 - O arquivo de cache não existe
 
 **Benefícios:**
