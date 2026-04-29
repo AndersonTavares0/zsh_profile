@@ -44,6 +44,8 @@ Professional Zsh configuration optimized for Fedora Linux, featuring intelligent
 - 🔧 **Utility Functions**: Advanced functions for directory management, Git, and system operations
 - 🎨 **Modern Theme**: Powerlevel10k with instant prompt support
 - 🐧 **Fedora Focused**: Native integration with DNF and Flatpak package managers
+- 🔒 **History Security**: Case-insensitive filtering of credentials from shell history
+- 📊 **Robust History**: 50,000 entries shared across concurrent sessions
 
 ---
 
@@ -126,14 +128,13 @@ sudo dnf install flatpak
 
 ### Navigation
 
-| Alias | Command | Description |
+| Alias/Function | Command | Description |
 |-------|---------|-------------|
 | `home` | `cd ~` | Go to home directory |
 | `docs` | `cd ~/Documents` | Go to Documents folder |
-| `up` | `cd ..` | Go up one level |
-| `up2` | `cd ../..` | Go up two levels |
-| `up3` | `cd ../../..` | Go up three levels |
-| `up4` | `cd ../../../..` | Go up four levels |
+| `dtop` | `cd ~/Desktop` | Go to Desktop folder |
+| `reload` | `source ~/.zshrc` | Reload shell configuration |
+| `up [n]` | Function | Go up `n` levels (default: 1). Ex: `up 3` |
 
 ### System Cleanup (Fedora)
 
@@ -158,7 +159,7 @@ sudo dnf install flatpak
 ### Navigation & Files
 
 #### `dtop`
-Navigate to Desktop directory.
+Navigate to Desktop directory (alias).
 ```bash
 dtop    # cd ~/Desktop
 ```
@@ -170,9 +171,9 @@ mkcd myproject    # mkdir -p myproject && cd myproject
 ```
 
 #### `nf`
-Create a new file and open it in the default editor.
+Create a new empty file with visual feedback.
 ```bash
-nf script.sh    # Creates and opens script.sh
+nf script.sh    # Creates script.sh and shows confirmation
 ```
 
 #### `extract`
@@ -181,7 +182,9 @@ Universal archive extractor supporting multiple formats.
 extract archive.tar.gz
 extract file.zip
 extract file.7z
+extract package.tar.zst
 ```
+Supported formats: `.tar.bz2`, `.tgz`, `.tar.xz`, `.tar.zst`, `.bz2`, `.gz`, `.xz`, `.zst`, `.tar`, `.zip`, `.rar`, `.7z`
 
 #### `bk`
 Create timestamped backup of a file.
@@ -206,10 +209,10 @@ lazyg "Update README"    # Executes full Git workflow
 ### Utilities
 
 #### `sudo` (`!!`)
-Re-run last command with sudo.
+Re-run last command with sudo, with security protections.
 ```bash
-apt update    # Permission denied
-sudo          # Re-runs: sudo apt update
+cat /etc/shadow      # Permission denied
+sudo !!               # Executes: sudo cat /etc/shadow
 ```
 
 #### `sedi`
@@ -239,9 +242,10 @@ zshrc-time    # Displays boot time in milliseconds
 The configuration includes an intelligent caching mechanism:
 
 - **Fingerprint-based**: Cache rebuilds only when tools change
-- **Monitored Tools**: zsh, git, eza, fzf, zoxide
-- **Automatic Rebuild**: Detects version changes automatically
+- **Monitored Tools**: zoxide, fzf
+- **Automatic Rebuild**: Detects path changes automatically
 - **Atomic Writes**: Prevents corruption during cache updates
+- **Cache Compilation**: Plugin cache is also compiled to bytecode
 - **Estimated Gain**: ~75ms faster startup on subsequent loads
 
 ### Boot Timer
@@ -253,9 +257,11 @@ Startup time is measured and displayed:
 
 ### Bytecode Compilation
 
-Zsh functions are compiled to bytecode for improved performance:
+The `.zshrc` and plugin cache are compiled automatically to bytecode (`.zwc`) for improved performance:
 ```zsh
-zcompile -U "$ZSH_CACHE_DIR/functions.zwc"
+if [[ ! -f ~/.zshrc.zwc || ~/.zshrc -nt ~/.zshrc.zwc ]]; then
+  zcompile ~/.zshrc &>/dev/null &!
+fi
 ```
 
 ---

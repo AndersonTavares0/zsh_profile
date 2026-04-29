@@ -73,25 +73,34 @@ ZSH_THEME=""
 ```
 Tema vazio intencionalmente — Powerlevel10k é carregado manualmente no final.
 
-### 6. Opções do Zsh (Linhas 38-39)
+### 6. Opções do Zsh (Linhas 38-44)
 ```zsh
 setopt AUTO_CD EXTENDED_GLOB
 setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS INC_APPEND_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST HIST_REDUCE_BLANKS SHARE_HISTORY
+
+HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
 ```
 - `AUTO_CD`: Permite navegar sem digitar `cd`
 - `EXTENDED_GLOB`: Habilita padrões glob avançados
 - `HIST_IGNORE_ALL_DUPS`: Remove duplicatas do histórico
 - `HIST_SAVE_NO_DUPS`: Não salva duplicatas
 - `INC_APPEND_HISTORY`: Salva histórico incrementalmente
+- `HIST_EXPIRE_DUPS_FIRST`: Remove duplicatas primeiro ao atingir HISTSIZE
+- `HIST_REDUCE_BLANKS`: Remove espaços extras dos comandos
+- `SHARE_HISTORY`: Compartilha histórico entre sessões simultâneas
 
-### 7. Filtro de Segurança do Histórico (Linhas 44-47)
+### 7. Filtro de Segurança do Histórico (Linhas 49-53)
 ```zsh
 zshaddhistory() {
-  [[ "$1" =~ (TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|CREDENTIAL)[[:space:]]*= ]] && return 1
+  local upper="${1:u}"
+  [[ "$upper" =~ (TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|CREDENTIAL|ACCESS_KEY)[[:space:]]*= ]] && return 1
   return 0
 }
 ```
-Hook que intercepta comandos antes de salvar no histórico. Bloqueia padrões comuns de credenciais.
+Hook que intercepta comandos antes de salvar no histórico. Converte para maiúsculas antes de comparar, garantindo filtragem case-insensitive de credenciais.
 
 ### 8. Sistema de Cache de Plugins (Linhas 52-96)
 Executado **antes** do Oh My Zsh para que plugins estejam prontos quando necessário.
@@ -129,7 +138,7 @@ Carregado no **final** conforme documentação oficial do P10K.
 ```zsh
 if [[ ! -f ~/.zshrc.zwc || ~/.zshrc -nt ~/.zshrc.zwc ]]; then
   zcompile ~/.zshrc &>/dev/null &!
-done
+fi
 ```
 Compilação assíncrona em background se `.zshrc` for mais recente que `.zshrc.zwc`.
 
@@ -159,7 +168,6 @@ _zsh_gen_fingerprint() {
 
 **Ferramentas monitoradas:**
 - `zoxide`
-- `eza`
 - `fzf`
 
 O fingerprint é um hash CKSUM concatenando paths de cada ferramenta. Mudança em qualquer path invalida o cache.
@@ -350,10 +358,9 @@ Diferente de outras distros que podem usar `/usr/share/doc/fzf/examples/`.
 
 ### `dtop`
 ```zsh
-dtop() { cd ~/Desktop || return 1; }
+alias dtop='cd ~/Desktop'
 ```
-- Navegação rápida para Desktop
-- `|| return 1` propaga erro se diretório não existir
+- Navegação rápida para Desktop via alias
 
 ### `mkcd`
 ```zsh
@@ -371,10 +378,13 @@ mkcd() {
 ```zsh
 nf() {
   [[ -z "$1" ]] && { printf '❌ Uso: nf <arquivo>\n' >&2; return 1; }
-  touch "$1" && printf '✅ Arquivo "%s" criado em %s\n' "$1" "$(pwd)"
+  [[ "$1" =~ [[:cntrl:]] ]] && { printf '❌ Nome inválido\n' >&2; return 1; }
+  touch -- "$1" && printf '✅ Arquivo "%s" criado em %s\n' "$1" "$(pwd)"
 }
 ```
 - Wrapper para `touch` com feedback visual
+- Valida contra caracteres de controle
+- Usa `--` para separar opções de argumentos
 - Mostra path absoluto de criação
 
 ### `gcom`
@@ -501,7 +511,10 @@ extract() {
 **Detalhes técnicos:**
 - `xj`: tar + bzip2
 - `xz`: tar + gzip
-- `xJ`: tar + xz (maiusculo)
+- `xJ`: tar + xz (maiúsculo)
+- `--zstd`: tar + zstd (formato Fedora)
+- Suporte a `.xz`, `.zst` standalone
+- Verifica retorno do comando e reporta falha
 - Fallback para formato desconhecido
 
 ### `bk`
@@ -567,12 +580,7 @@ zshrc-time() {
 
 ### ⚠️ Redundâncias Leves
 
-1. **Aliases up/up2/up3/up4**: Poderiam ser uma função única com parâmetro
-   ```zsh
-   up() { cd $(printf '../%.0s' {1..${1:-1}}); }
-   ```
-
-2. **Verificação dupla de Git em `lazyg`**: `gcom` já valida, mas `lazyg` também captura erro separadamente (justificável para mensagem específica)
+1. **Verificação dupla de Git em `lazyg`**: `gcom` já valida, mas `lazyg` também captura erro separadamente (justificável para mensagem específica)
 
 ### 🔒 Riscos Leves
 

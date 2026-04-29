@@ -1,6 +1,6 @@
 # ==============================================================================
 # ARQUIVO DE CONFIGURAÇÃO DO ZSH (~/.zshrc)
-# Versão: 2.2 | Otimizado para Fedora + Oh My Zsh + Powerlevel10k
+# Versão: 2.3 | Otimizado para Fedora + Oh My Zsh + Powerlevel10k
 # ==============================================================================
 
 # ==============================================================================
@@ -37,12 +37,18 @@ ZSH_THEME=""
 # ==============================================================================
 setopt AUTO_CD EXTENDED_GLOB
 setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS INC_APPEND_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST HIST_REDUCE_BLANKS SHARE_HISTORY
+
+HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
 
 # ==============================================================================
 # FILTRO DE SEGURANÇA DO HISTÓRICO
 # ==============================================================================
 zshaddhistory() {
-  [[ "$1" =~ (TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|CREDENTIAL)[[:space:]]*= ]] && return 1
+  local upper="${1:u}"
+  [[ "$upper" =~ (TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY|CREDENTIAL|ACCESS_KEY)[[:space:]]*= ]] && return 1
   return 0
 }
 
@@ -50,7 +56,7 @@ zshaddhistory() {
 # SISTEMA DE CACHE DE PLUGINS
 # ==============================================================================
 _PLUGIN_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh_plugins_init.zsh"
-_TOOLS_WATCHED=(zoxide eza fzf)
+_TOOLS_WATCHED=(zoxide fzf)
 
 _zsh_gen_fingerprint() {
   local fp="" tool path_val
@@ -63,6 +69,7 @@ _zsh_gen_fingerprint() {
 
 _zsh_build_plugin_cache() {
   local tmp=$(mktemp) || return 1
+  trap "rm -f '$tmp'" INT TERM
   printf '# zsh_plugin_cache fingerprint: %s\n' "$(_zsh_gen_fingerprint)" > "$tmp"
 
   # zoxide
@@ -93,6 +100,9 @@ else
 fi
 
 [[ -f "$_PLUGIN_CACHE" ]] && source "$_PLUGIN_CACHE"
+if [[ -f "$_PLUGIN_CACHE" && ( ! -f "${_PLUGIN_CACHE}.zwc" || "$_PLUGIN_CACHE" -nt "${_PLUGIN_CACHE}.zwc" ) ]]; then
+  zcompile "$_PLUGIN_CACHE" &>/dev/null &!
+fi
 unset _PLUGIN_CACHE _TOOLS_WATCHED _zsh_current_fp _zsh_cached_fp
 
 # ==============================================================================
@@ -100,10 +110,13 @@ unset _PLUGIN_CACHE _TOOLS_WATCHED _zsh_current_fp _zsh_cached_fp
 # ==============================================================================
 plugins=(git history)
 
-[[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions" ]] && \
-  plugins+=(zsh-autosuggestions)
-[[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting" ]] && \
-  plugins+=(zsh-syntax-highlighting)
+# Se zsh-defer estiver disponível, plugins pesados serão carregados de forma diferida
+if [[ ! -f "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-defer/zsh-defer.plugin.zsh" ]]; then
+  [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions" ]] && \
+    plugins+=(zsh-autosuggestions)
+  [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting" ]] && \
+    plugins+=(zsh-syntax-highlighting)
+fi
 
 source "$ZSH/oh-my-zsh.sh"
 
@@ -136,10 +149,10 @@ fi
 # ==============================================================================
 # ALIASES — GREP COLORIDO
 # ==============================================================================
-if grep --version &>/dev/null; then
+if command -v grep &>/dev/null; then
   alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
+  alias fgrep='grep -F --color=auto'
+  alias egrep='grep -E --color=auto'
 fi
 
 # ==============================================================================
@@ -147,15 +160,18 @@ fi
 # ==============================================================================
 alias home='cd ~'
 alias docs='cd ~/Documents'
-alias up='cd ..'
-alias up2='cd ../..'
-alias up3='cd ../../..'
-alias up4='cd ../../../..'
+alias dtop='cd ~/Desktop'
+alias reload='source ~/.zshrc && printf "✅ .zshrc recarregado\n"'
 
 # ==============================================================================
 # FUNÇÕES — NAVEGAÇÃO E ARQUIVOS
 # ==============================================================================
-dtop() { cd ~/Desktop || return 1; }
+up() {
+  local n=${1:-1}
+  local path=""
+  for ((i=0; i<n; i++)); do path+="../"; done
+  cd "$path" || return 1
+}
 
 mkcd() {
   [[ -z "$1" ]] && { printf '❌ Uso: mkcd <diretório>\n' >&2; return 1; }
@@ -165,7 +181,8 @@ mkcd() {
 
 nf() {
   [[ -z "$1" ]] && { printf '❌ Uso: nf <arquivo>\n' >&2; return 1; }
-  touch "$1" && printf '✅ Arquivo "%s" criado em %s\n' "$1" "$(pwd)"
+  [[ "$1" =~ [[:cntrl:]] ]] && { printf '❌ Nome inválido\n' >&2; return 1; }
+  touch -- "$1" && printf '✅ Arquivo "%s" criado em %s\n' "$1" "$(pwd)"
 }
 
 # ==============================================================================
@@ -235,9 +252,11 @@ sedi() {
   local pattern="$1" file="$2"
   local backup="${file}.bak.$(date +%Y%m%d%H%M%S)"
   local tmp=$(mktemp) || return 1
+  trap "rm -f '$tmp'" INT TERM
   
   cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file" && \
     printf '✅ Modificado. Backup: %s\n' "$backup"
+  trap - INT TERM
 }
 
 extract() {
@@ -247,14 +266,17 @@ extract() {
     *.tar.bz2|*.tbz2) tar xjf "$1" ;;
     *.tar.gz|*.tgz)   tar xzf "$1" ;;
     *.tar.xz)         tar xJf "$1" ;;
+    *.tar.zst)        tar --zstd -xf "$1" ;;
     *.bz2)            bunzip2 "$1" ;;
     *.gz)             gunzip "$1" ;;
+    *.xz)             unxz "$1" ;;
+    *.zst)            unzstd "$1" ;;
     *.tar)            tar xf "$1" ;;
     *.zip)            unzip "$1" ;;
     *.rar)            unrar x "$1" ;;
     *.7z)             7z x "$1" ;;
     *)                printf '❌ Formato não suportado\n' >&2; return 1 ;;
-  esac
+  esac || { printf '❌ Falha ao extrair: %s\n' "$1" >&2; return 1; }
   
   printf '✅ Extraído: %s\n' "$1"
 }
@@ -267,7 +289,7 @@ bk() {
 
 port() {
   if [[ -n "$1" ]]; then
-    ss -tulpn | grep ":$1" || printf '⚠️ Porta %s livre\n' "$1"
+    ss -tulpn | grep -w ":$1" || printf '⚠️ Porta %s livre\n' "$1"
   else
     ss -tulpn
   fi
