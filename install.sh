@@ -3,7 +3,7 @@
 # Zsh Profile — Interactive Installer
 #
 # One command for everything:
-#   curl -fsSL https://raw.githubusercontent.com/andersonbosa/zsh_profile/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/AndersonTavares0/zsh_profile/main/install.sh | bash
 #
 # The script detects piped input and presents an interactive menu via /dev/tty.
 # Choose: [1] Install  [2] Uninstall  [3] Quick Install (skip prompts)  [q] Quit
@@ -95,7 +95,7 @@ do_link_config() {
   if [[ -z "$REPO_DIR" ]]; then
     printf "${RED}Cannot link: running via curl without a local repo.${NC}\n"
     printf "Clone first, then run locally:\n"
-    printf "  git clone https://github.com/andersonbosa/zsh_profile.git\n"
+    printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git\n"
     printf "  cd zsh_profile && ./install.sh\n"
     return 1
   fi
@@ -242,7 +242,7 @@ main() {
         if [[ -z "$REPO_DIR" ]]; then
           printf "${YELLOW}Note: Running via curl — symlinks not possible.${NC}\n"
           printf "Clone the repo and run locally to symlink:\n"
-          printf "  git clone https://github.com/andersonbosa/zsh_profile.git ~/zsh_profile\n"
+          printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git ~/zsh_profile\n"
           printf "  cd ~/zsh_profile && ./install.sh --install\n"
         fi
         break
@@ -254,7 +254,7 @@ main() {
         if [[ -z "$REPO_DIR" ]]; then
           printf "${YELLOW}Note: Running via curl — symlinks not possible.${NC}\n"
           printf "Clone and run locally:\n"
-          printf "  git clone https://github.com/andersonbosa/zsh_profile.git ~/zsh_profile\n"
+          printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git ~/zsh_profile\n"
           printf "  cd ~/zsh_profile && ./install.sh --install\n"
         fi
         break

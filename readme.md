@@ -15,7 +15,7 @@ Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), 
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/andersonbosa/zsh_profile/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AndersonTavares0/zsh_profile/main/install.sh | bash
 ```
 
 An interactive menu appears — even through a piped curl session. Choose:
