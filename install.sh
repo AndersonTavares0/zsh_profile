@@ -13,13 +13,29 @@ set -euo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
-# Resolve repo directory: when piped via curl, $0 is "bash", so fall back to PWD
+# Resolve repo directory: when piped via curl, clone to ~/.zsh_profile_repo
+REPO_DIR=""
+REPO_URL="https://github.com/AndersonTavares0/zsh_profile.git"
+REPO_CLONE_DIR="$HOME/.zsh_profile_repo"
+
 if [[ "${BASH_SOURCE[0]:-}" != "" && "${BASH_SOURCE[0]}" != "bash" ]]; then
   REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-else
-  # Running via curl pipe — need to clone first for install, or use standalone for uninstall
-  REPO_DIR=""
 fi
+
+ensure_repo() {
+  if [[ -n "$REPO_DIR" ]]; then
+    return 0
+  fi
+  if [[ -d "$REPO_CLONE_DIR/.git" ]]; then
+    printf "${CYAN}Updating existing clone...${NC}\n"
+    git -C "$REPO_CLONE_DIR" pull --ff-only 2>/dev/null || true
+    REPO_DIR="$REPO_CLONE_DIR"
+    return 0
+  fi
+  printf "${CYAN}Cloning repository...${NC}\n"
+  git clone --depth=1 "$REPO_URL" "$REPO_CLONE_DIR"
+  REPO_DIR="$REPO_CLONE_DIR"
+}
 
 # ─── Utility functions ───────────────────────────────────────────────────────
 
@@ -92,13 +108,7 @@ do_install_plugins() {
 }
 
 do_link_config() {
-  if [[ -z "$REPO_DIR" ]]; then
-    printf "${RED}Cannot link: running via curl without a local repo.${NC}\n"
-    printf "Clone first, then run locally:\n"
-    printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git\n"
-    printf "  cd zsh_profile && ./install.sh\n"
-    return 1
-  fi
+  ensure_repo
   printf "${CYAN}Linking config...${NC}\n"
   ln -sf "$REPO_DIR/.zshrc"       "$HOME/.zshrc"
   ln -sfn "$REPO_DIR/modules"     "$HOME/.zsh_modules"
@@ -237,26 +247,14 @@ main() {
         echo ""
         do_quick_install
 
-        printf "\n${GREEN}${BOLD}Done!${NC}\n"
+      printf "\n${GREEN}${BOLD}Done!${NC}\n"
         printf "Restart your terminal or run: ${YELLOW}source ~/.zshrc${NC}\n"
-        if [[ -z "$REPO_DIR" ]]; then
-          printf "${YELLOW}Note: Running via curl — symlinks not possible.${NC}\n"
-          printf "Clone the repo and run locally to symlink:\n"
-          printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git ~/zsh_profile\n"
-          printf "  cd ~/zsh_profile && ./install.sh --install\n"
-        fi
         break
         ;;
       2)
         printf "${BOLD}${GREEN}▶ Quick Install${NC}\n\n"
         do_quick_install
         printf "\n${GREEN}${BOLD}Done!${NC} Restart your terminal or: ${YELLOW}source ~/.zshrc${NC}\n"
-        if [[ -z "$REPO_DIR" ]]; then
-          printf "${YELLOW}Note: Running via curl — symlinks not possible.${NC}\n"
-          printf "Clone and run locally:\n"
-          printf "  git clone https://github.com/AndersonTavares0/zsh_profile.git ~/zsh_profile\n"
-          printf "  cd ~/zsh_profile && ./install.sh --install\n"
-        fi
         break
         ;;
       3)
