@@ -27,3 +27,6 @@ zsh_plugins_init.zsh
 .vscode/
 .DS_Store
 Thumbs.db
+
+# --- Graphify Knowledge Graph ---
+graphify-out/
