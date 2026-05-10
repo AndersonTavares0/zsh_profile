@@ -7,11 +7,11 @@ typeset -U path PATH fpath FPATH
 
 # ==============================================================================
 # PATH — user-local directories take priority over system paths
+# ~/.opencode/bin: OpenCode AI CLI tool
 # ~/.local/bin: pip install --user, local scripts
 # ~/bin:         manual binary drops
 # ~/.spicetify:  Spicetify CLI (Spotify customization tool)
-# ==============================================================================
-export PATH="$HOME/.local/bin:$HOME/bin:$HOME/.spicetify:$PATH"
+export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$HOME/bin:$HOME/.spicetify:$PATH"
 
 # ==============================================================================
 # XDG Base Directory Specification
