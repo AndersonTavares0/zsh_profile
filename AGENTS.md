@@ -29,7 +29,7 @@
 ## Plugin Cache System
 - Watches: zoxide, eza, fzf
 - Rebuilds when any watched tool version changes or cache missing
-- Fingerprint based on tool paths: `tool=/path/to/tool;`
+- Fingerprint based on tool versions: `tool --version 2>/dev/null | head -1` → `cksum` hash
 - Cache location: $XDG_CACHE_HOME/zsh_plugins_init.zsh
 - Rebuild triggered automatically in .zshrc
 

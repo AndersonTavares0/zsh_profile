@@ -1,288 +1,207 @@
-# Zsh Config — Fedora Optimized
+# zsh_profile — Fedora-Optimized Zsh Config
 
-[![Zsh](https://img.shields.io/badge/Shell-Zsh-f15a24?logo=zsh&logoColor=white)](https://zsh.sourceforge.io/)
-[![Fedora](https://img.shields.io/badge/OS-Fedora-294172?logo=fedora&logoColor=white)](https://getfedora.org/)
-[![Oh My Zsh](https://img.shields.io/badge/Framework-Oh%20My%20Zsh-000000?logo=github&logoColor=white)](https://ohmyz.sh/)
-[![Powerlevel10k](https://img.shields.io/badge/Theme-Powerlevel10k-blue?logo=github&logoColor=white)](https://github.com/romkatv/powerlevel10k)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Zsh 5.9](https://img.shields.io/badge/zsh-5.9-f15a24?logo=zsh&logoColor=white)](https://zsh.sourceforge.io/)
+[![Fedora](https://img.shields.io/badge/fedora-44-294172?logo=fedora&logoColor=white)](https://fedoraproject.org/)
+[![Oh My Zsh](https://img.shields.io/badge/oh--my--zsh-latest-black?logo=github)](https://ohmyz.sh/)
+[![Powerlevel10k](https://img.shields.io/badge/powerlevel10k-v1.20.0-blue?logo=github)](https://github.com/romkatv/powerlevel10k)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![ShellCheck](https://img.shields.io/badge/lint-zsh--n-brightgreen)](#)
+[![Lines](https://img.shields.io/badge/lines-598-informational)](#)
 
-Configuração do Zsh otimizada para Fedora Linux, com foco em performance, segurança e produtividade. Utiliza Oh My Zsh, Powerlevel10k e um sistema inteligente de cache de plugins.
-
----
-
-## 🧭 Navegação Rápida
-
-**Documentação:**
-- [📚 Documentação Técnica Completa →](docs.md)
-
-**Seções deste documento:**
-- [↗️ Recursos Principais](#recursos-principais)
-- [↗️ Compatibilidade](#compatibilidade)
-- [↗️ Dependências Recomendadas](#dependências-recomendadas)
-- [↗️ Instalação](#instalação)
-- [↗️ Aliases Disponíveis](#aliases-disponíveis)
-  - [Listagem de Arquivos](#listagem-de-arquivos-eza)
-  - [Navegação](#navegação)
-  - [Limpeza do Sistema](#limpeza-do-sistema-fedora)
-  - [Grep Colorido](#grep-colorido)
-- [↗️ Funções Disponíveis](#funções-disponíveis)
-  - [Navegação e Arquivos](#navegação-e-arquivos)
-  - [Git](#git)
-  - [Utilitários](#utilitários)
-- [↗️ Performance](#performance)
-- [↗️ Uso de IA](#uso-de-ia)
+Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, and in-shell security safeguards. Modular architecture — 14 self-documenting source files.
 
 ---
 
-## Recursos Principais
-
-- **Instant Prompt**: Carregamento imediato do prompt via Powerlevel10k
-- **Cache Inteligente de Plugins**: Rebuild automático baseado em fingerprint das ferramentas
-- **Boot Timer**: Monitoramento do tempo de inicialização do shell
-- **Aliases Produtivos**: Comandos simplificados para navegação e listagem de arquivos
-- **Funções Utilitárias**: Ferramentas para Git, arquivos, backup e gerenciamento de sistema
-- **Segurança no Histórico**: Filtragem automática case-insensitive de credenciais sensíveis
-- **Lazy Loading**: Carregamento diferido de plugins pesados (opcional)
-- **Histórico Robusto**: 50.000 entradas compartilhadas entre sessões
-
-## Compatibilidade
-
-| Sistema | Status |
-|---------|--------|
-| **Fedora Linux** | ✅ Foco principal |
-| Outras distros RPM | ⚠️ Funcional (ajustar gerenciador de pacotes) |
-| Debian/Ubuntu | ⚠️ Requer adaptação dos aliases DNF |
-| macOS | ⚠️ Parcial (testar compatibilidade) |
-
-## Dependências Recomendadas
+## Quick Install
 
 ```bash
-# Essenciais
-zsh git
-
-# Ferramentas opcionais (habilitam funcionalidades extras)
-eza fzf zoxide
-
-# Framework e tema
-oh-my-zsh powerlevel10k
-
-# Gerenciadores de pacote (Fedora)
-dnf flatpak
+curl -fsSL https://raw.githubusercontent.com/andersonbosa/zsh_profile/main/install.sh | bash
 ```
 
-### Instalação das Dependências (Fedora)
+An interactive menu appears — even through a piped curl session. Choose:
+
+```
+╔══════════════════════════════════════════╗
+║        Zsh Profile — Fedora v3.0        ║
+╠══════════════════════════════════════════╣
+║                                          ║
+║  [1] Install                             ║
+║  [2] Quick Install (auto, no prompts)    ║
+║  [3] Uninstall                           ║
+║  [q] Quit                                ║
+║                                          ║
+╚══════════════════════════════════════════╝
+
+Choose [1-3/q]:
+```
+
+**Option 1** walks you through each step with confirmation. **Option 2** installs everything immediately. **Option 3** removes symlinks and cache without touching installed packages.
+
+### Non-interactive flags
 
 ```bash
+./install.sh --install     # Install without menu
+./install.sh --uninstall   # Uninstall without menu
+```
+
+---
+
+## Features
+
+### Performance
+- **Powerlevel10k Instant Prompt** — perceived prompt delay &lt;50ms. Must be the first line sourced.
+- **Plugin Init Cache** — `zoxide init` and `fzf` key-bindings cached to `$XDG_CACHE_HOME`. Rebuilds only when tool versions change (DNF in-place upgrades detected via `tool --version` fingerprint, not binary path).
+- **Bytecode Compilation** — `.zshrc` auto-compiled to `.zwc` in background via `zcompile`.
+- **Boot Timer** — `zshrc-time` displays measured startup time with color-coded thresholds.
+
+### Security
+- **History Filter** (`zshaddhistory` hook) — silently blocks credential patterns from history:
+  env vars (TOKEN, SECRET, API_KEY, ...), URL-embedded tokens (`https://user:pass@host`),
+  flag-based credentials (`--token`, `--password`, `-p`), SSH key material, and GPG passphrase commands. Also blocks commands &gt;4096 chars.
+- **Sudo Wrapper** — `sudo !!` re-executes the last command as root with a safety blocklist: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`, and recursive `sudo` are refused.
+
+### Productivity
+- **14 modular source files** — one concern per file, loaded in strict dependency order with inline documentation explaining every flag and pattern.
+- **eza aliases** — `ls`, `ll`, `la`, `l`, `lt` with icons, git status, and tree view (gracefully skipped when eza is absent).
+- **8 utility functions** — directory navigation (`mkcd`, `up [n]`), git workflow (`gcom`, `lazyg` with 10s push timeout), safe sed with backup (`sedi`), multi-format archive extractor (`extract`), timestamped backups (`bk`), and port scanner (`port`).
+- **System cleanup** — `dnf-clean`, `flatpak-clean`, `sys-clean` for Fedora package maintenance.
+- **XDG compliance** — `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` exported so modern CLI tools auto-respect them.
+
+---
+
+## Architecture
+
+```
+~/.zshrc                     # Entry point (symlinked by installer)
+~/.zsh_modules/             # Module directory (symlinked by installer)
+├── prompt.zsh              # ① P10k Instant Prompt (MUST be first)
+├── boot-init.zsh           # ② Wall-clock timer start (EPOCHREALTIME)
+├── environment.zsh         # ③ PATH dedup, user bins, XDG base dirs
+├── shell.zsh               # ④ Zsh options, 50K history, dedup, sharing
+├── security.zsh            # ⑤ History credential filter + sudo wrapper
+├── cache.zsh               # ⑥ Version-fingerprint plugin init cache
+├── omz.zsh                 # ⑦ Oh My Zsh framework, conditional plugins
+├── lazy.zsh                # ⑧ zsh-defer deferred source (optional)
+├── aliases.zsh             # ⑨ eza, grep, navigation, system cleanup
+├── functions.zsh           # ⑩ up, mkcd, nf, gcom, lazyg, sedi, extract, bk, port
+├── local.zsh               # ⑪ ~/.zshrc.local overrides (pre-theme)
+├── theme.zsh               # ⑫ P10k theme (MUST be last substantive source)
+├── compile.zsh             # ⑬ Bytecode compilation (background)
+└── boot-end.zsh            # ⑭ Timer end + zshrc-time display
+```
+
+Numbers indicate load order — P10k Instant Prompt must be first, P10k theme must be last. Everything between follows the dependency chain.
+
+---
+
+## Requirements
+
+| Dependency | Role | Mandatory |
+|---|---|---|
+| **zsh** &ge; 5.8 | Shell | Yes |
+| **git** | OMZ & plugin cloning | Yes |
+| **eza** | Modern `ls` with icons + git status | No (aliases skipped if absent) |
+| **fzf** | Ctrl-R history, Ctrl-T files, Alt-C dirs | No |
+| **zoxide** | `z` frecency-based directory jumping | No |
+| **oh-my-zsh** | Plugin framework | Yes |
+| **powerlevel10k** | Prompt theme | Yes |
+
+Manual setup (Fedora):
+
+```bash
+# System packages
 sudo dnf install zsh git eza fzf zoxide -y
 
 # Oh My Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Powerlevel10k
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+  ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-# Plugins opcionais
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+# Optional plugins
+ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
+git clone https://github.com/romkatv/zsh-defer $ZSH_CUSTOM/plugins/zsh-defer
 ```
-
-## Instalação
-
-1. Clone ou copie este repositório:
-   ```bash
-   cp .zshrc ~/.zshrc
-   ```
-
-2. Reinicie o shell ou execute:
-   ```bash
-   source ~/.zshrc
-   ```
-
-3. Na primeira execução, o Powerlevel10k iniciará o assistente de configuração.
-
-## Aliases Disponíveis
-
-### Listagem de Arquivos (eza)
-
-| Alias | Comando Equivalente | Descrição |
-|-------|---------------------|-----------|
-| `ls` | `eza --icons --group-directories-first` | Listagem com ícones, diretórios primeiro |
-| `ll` | `eza -lh --icons --group-directories-first --git` | Lista detalhada com status Git |
-| `la` | `eza -lah --icons --group-directories-first --git` | Lista todos (inclui ocultos) com Git |
-| `l` | `eza -1 --icons` | Um arquivo por linha com ícones |
-| `lt` | `eza --tree --icons --level=2` | Visualização em árvore (2 níveis) |
-
-> **Nota:** Requer `eza` instalado. Se não disponível, os aliases não são criados.
-
-### Navegação
-
-| Alias/Função | Ação |
-|-------|------|
-| `home` | `cd ~` — Vai para a home |
-| `docs` | `cd ~/Documents` — Vai para Documentos |
-| `dtop` | `cd ~/Desktop` — Vai para a Área de Trabalho |
-| `reload` | Recarrega o `.zshrc` |
-| `up [n]` | Sobe `n` níveis (padrão: 1). Ex: `up 3` |
-
-### Limpeza do Sistema (Fedora)
-
-| Alias | Ação |
-|-------|------|
-| `dnf-clean` | Remove dependências órfãs e limpa cache DNF |
-| `flatpak-clean` | Remove runtimes Flatpak não utilizados |
-| `sys-clean` | Executa ambas limpezas (DNF + Flatpak) |
-
-### Grep Colorido
-
-| Alias | Ação |
-|-------|------|
-| `grep` | `grep --color=auto` |
-| `fgrep` | `fgrep --color=auto` |
-| `egrep` | `egrep --color=auto` |
-
-## Funções Disponíveis
-
-### Navegação e Arquivos
-
-#### `dtop`
-Navega para `~/Desktop` (alias).
-```bash
-dtop
-```
-
-#### `mkcd <diretório>`
-Cria um diretório e entra nele.
-```bash
-mkcd meu-projeto
-# Equivalente a: mkdir -p meu-projeto && cd meu-projeto
-```
-
-#### `nf <arquivo>`
-Cria um arquivo vazio no diretório atual.
-```bash
-nf README.md
-# Saída: ✅ Arquivo "README.md" criado em /caminho/atual
-```
-
-### Git
-
-#### `gcom "mensagem"`
-Adiciona todos os arquivos e faz commit.
-```bash
-gcom "Correção de bug crítico"
-```
-- Valida se está em repositório Git
-- Verifica se há mudanças pendentes
-- Retorna erro se working tree estiver limpo
-
-#### `lazyg "mensagem"`
-Commit interativo com opção de push.
-```bash
-lazyg "Nova feature implementada"
-```
-Fluxo:
-1. Executa `gcom` internamente
-2. Pergunta: `🚀 Enviar para origin/<branch>? [s/N]`
-3. Timeout de 10 segundos
-4. Confirmação com `s/S/y/Y` envia o push
-
-### Utilitários
-
-#### `sudo !!`
-Reexecuta o último comando com `sudo`, com proteções de segurança.
-```bash
-# Exemplo de uso
-cat /etc/shadow        # Permission denied
-sudo !!                # Executa: sudo cat /etc/shadow
-```
-
-**Comandos bloqueados por segurança:**
-- `sudo` recursivo
-- `rm -rf /`
-- `mkfs`
-- `dd of=`
-- `chmod -R 777 /`
-
-#### `sedi "padrão" <arquivo>`
-Substituição segura com backup automático.
-```bash
-sedi "s/old/new/g" config.txt
-# Cria backup: config.txt.bak.YYYYMMDDHHMMSS
-```
-
-#### `extract <arquivo>`
-Extrai arquivos compactados automaticamente.
-```bash
-extract projeto.tar.gz
-extract backup.zip
-extract arquivo.rar
-```
-Formatos suportados: `.tar.bz2`, `.tgz`, `.tar.xz`, `.tar.zst`, `.bz2`, `.gz`, `.xz`, `.zst`, `.tar`, `.zip`, `.rar`, `.7z`
-
-#### `bk <arquivo>`
-Cria backup de um arquivo.
-```bash
-bk config.json
-# Saída: ✅ Backup: config.json.bak.20250101_120000
-```
-
-#### `port [número]`
-Verifica portas em uso.
-```bash
-port          # Lista todas as portas
-port 8080     # Verifica se porta 8080 está em uso
-```
-
-#### `zshrc-time`
-Exibe tempo de carregamento do `.zshrc`.
-```bash
-zshrc-time
-# Saídas possíveis:
-# ⚡ .zshrc: 95ms (excelente)
-# ⚡ .zshrc: 180ms (bom)
-# ⚡ .zshrc: 350ms (aceitável)
-# 🐢 .zshrc: 620ms (lento)
-```
-
-## Performance
-
-### Sistema de Cache
-
-O cache de plugins é gerado automaticamente e reconstruído apenas quando:
-- O fingerprint das ferramentas monitoradas muda (`zoxide`, `fzf`)
-- O arquivo de cache não existe
-
-**Benefícios:**
-- Evita execução repetida de comandos de inicialização
-- Reduz tempo de boot do shell em ~30-50%
-- Atualização transparente sem intervenção do usuário
-
-### Boot Timer
-
-O tempo de carregamento é medido e armazenado na variável `_zshrc_load_ms`. Use `zshrc-time` para verificar.
-
-**Classificação de performance:**
-- `< 150ms`: Excelente
-- `< 200ms`: Bom
-- `< 500ms`: Aceitável
-- `≥ 500ms`: Lento (considere revisar plugins)
-
-### Compilação Bytecode
-
-O `.zshrc` é compilado automaticamente para `.zshrc.zwc` (bytecode Zsh), acelerando parsing em execuções subsequentes.
 
 ---
 
-[← Voltar ao Topo](#zsh-config--fedora-optimized) | [📚 Documentação Técnica →](docs.md)
+## Commands
 
-> **Dica:** Para configurações pessoais específicas, crie `~/.zshrc.local` e ele será carregado automaticamente ao final.
+### Shell Info
 
-## Uso de IA
+| Command | Description |
+|---------|-------------|
+| `zshrc-time` | Display boot time with color-coded rating |
+| `port [num]` | List listening ports or check if a port is in use |
 
-Este projeto foi desenvolvido com auxílio de Inteligência Artificial em todas as etapas:
-- Geração e refatoração do código
-- Revisão técnica e ortográfica da documentação
-- Organização estrutural e identificação de padrões
-- Sugestões de otimização e boas práticas
+### Navigation
 
-A IA atuou como ferramenta de apoio para acelerar o desenvolvimento e melhorar a qualidade do código e da documentação.
+| Command | Description |
+|---------|-------------|
+| `home` / `docs` / `dtop` | Jump to `~`, `~/Documents`, `~/Desktop` |
+| `up [n]` | Go up `n` directory levels (default: 1) |
+| `mkcd <dir>` | Create directory and `cd` into it |
+
+### File Operations
+
+| Command | Description |
+|---------|-------------|
+| `nf <file>` | Create empty file with confirmation |
+| `bk <file>` | Timestamped backup (`file.bak.YYYYMMDD_HHMMSS`) |
+| `extract <archive>` | Auto-detect format: tar.gz, zip, rar, 7z, tar.zst, etc. |
+| `sedi "s/a/b/" <file>` | In-place sed with automatic timestamped backup |
+
+### Git
+
+| Command | Description |
+|---------|-------------|
+| `gcom "msg"` | Stage all + commit (fails on clean working tree) |
+| `lazyg "msg"` | `gcom` + interactive push prompt (10s timeout) |
+
+### System (Fedora)
+
+| Command | Description |
+|---------|-------------|
+| `dnf-clean` | Autoremove orphans + clean DNF cache |
+| `flatpak-clean` | Remove unused Flatpak runtimes |
+| `sys-clean` | Both cleanup operations |
+| `reload` | Re-source `~/.zshrc` |
+
+### File Listing
+
+| Command | Equivalent |
+|---------|-----------|
+| `ls` | `eza --icons --group-directories-first` |
+| `ll` | `eza -lh --icons --group-directories-first --git` |
+| `la` | `eza -lah --icons --group-directories-first --git` |
+| `l` | `eza -1 --icons` |
+| `lt` | `eza --tree --icons --level=2` |
+
+---
+
+## Configuration
+
+Machine-specific overrides go in `~/.zshrc.local` — sourced automatically before the theme, never tracked in git.
+
+Each module file is self-documenting: comments explain what every flag, option, and pattern does, not just what the code does.
+
+---
+
+## Compatibility
+
+| Platform | Status |
+|----------|--------|
+| **Fedora Linux** | Primary target — all features tested |
+| RHEL / CentOS Stream | Works (DNF-based, same packages) |
+| Debian / Ubuntu | Works with `apt` (installer auto-detects) |
+| Arch Linux | Works with `pacman` (installer auto-detects) |
+| macOS | Partial — no DNF aliases, eza via Homebrew |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
