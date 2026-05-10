@@ -28,7 +28,11 @@ Shell starts fast, stays secure, and makes daily terminal work more productive w
   4. PATH is deduplicated and includes ~/.local/bin and ~/bin — user can run locally installed tools without full paths
   5. History is preserved across sessions with 50K entries, deduplication, and cross-session sharing enabled
   6. Powerlevel10k theme loads at the very end of .zshrc, after ~/.zshrc.local overrides and .p10k.zsh configuration — prompt appears correctly with configured style
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Plugin cache hardening: version fingerprint (D-01), flock locking (D-04), eza watching (D-02), XDG env vars (D-23/D-24)
+- [ ] 01-02-PLAN.md — History filter extension (D-26/D-27), theme loading verification (THEME-01/02/03), boot timer verify, SKELETON.md
 
 ### Phase 2: Productivity
 **Goal:** User has efficient aliases and functions for daily terminal work — file listing, navigation, git workflow, system cleanup, and utility operations.
@@ -59,6 +63,6 @@ Shell starts fast, stays secure, and makes daily terminal work more productive w
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Performance | 0/0 | Not started | - |
+| 1. Foundation & Performance | 0/2 | Planned | - |
 | 2. Productivity | 0/0 | Not started | - |
 | 3. Security | 0/0 | Not started | - |
