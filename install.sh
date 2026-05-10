@@ -131,10 +131,8 @@ do_quick_install() {
   do_install_omz
   do_install_p10k
   do_install_plugins
-  if [[ -n "$REPO_DIR" ]]; then
-    do_link_config
-    do_set_shell
-  fi
+  do_link_config
+  do_set_shell
 }
 
 # ─── Uninstall ───────────────────────────────────────────────────────────────
@@ -227,9 +225,7 @@ main() {
         printf "  • Install Oh My Zsh framework\n"
         printf "  • Clone Powerlevel10k theme\n"
         printf "  • Install optional plugins (autosuggestions, syntax-highlighting, zsh-defer)\n"
-        if [[ -n "$REPO_DIR" ]]; then
           printf "  • Symlink ~/.zshrc and ~/.zsh_modules\n"
-        fi
         printf "\n"
 
         if [[ -t 0 ]]; then
