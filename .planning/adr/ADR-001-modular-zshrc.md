@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-05-10
-**Deciders:** andersonbosa
+**Deciders:** AndersonTavares0
 
 ## Context
 
