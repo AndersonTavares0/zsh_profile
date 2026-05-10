@@ -243,7 +243,7 @@ main() {
         echo ""
         do_quick_install
 
-      printf "\n${GREEN}${BOLD}Done!${NC}\n"
+        printf "\n${GREEN}${BOLD}Done!${NC}\n"
         printf "Restart your terminal or run: ${YELLOW}source ~/.zshrc${NC}\n"
         break
         ;;
