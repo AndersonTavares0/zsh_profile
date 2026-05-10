@@ -9,13 +9,15 @@
 #   tools/   — user productivity (aliases, functions, local overrides)
 # ==============================================================================
 
-# Resolve module directory (installer symlink first, then repo-relative fallback)
+# Resolve module directory (installer symlink → repo-relative → git root fallback)
 if [[ -d "$HOME/.zsh_modules" ]]; then
   _M="$HOME/.zsh_modules"
 elif [[ -d "${0:A:h}/modules" ]]; then
   _M="${0:A:h}/modules"
+elif repo_root=$(git -C "${0:A:h}" rev-parse --show-toplevel 2>/dev/null) && [[ -d "$repo_root/modules" ]]; then
+  _M="$repo_root/modules"
 else
-  echo ".zshrc: modules not found at ~/.zsh_modules or repo-relative" >&2
+  echo ".zshrc: modules not found — clone repo or use install.sh" >&2
   _M=""
 fi
 
