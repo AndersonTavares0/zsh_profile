@@ -102,9 +102,12 @@ sedi() {
   local tmp=$(mktemp) || return 1
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file" && \
-    printf 'Modified. Backup: %s\n' "$backup"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
+  local rc=$?
   trap - INT TERM
+
+  [[ $rc -eq 0 ]] && printf 'Modified. Backup: %s\n' "$backup"
+  return $rc
 }
 
 # extract <archive>: auto-detect archive format and extract
