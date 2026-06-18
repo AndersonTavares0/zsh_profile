@@ -3,7 +3,7 @@
 # typeset -U: treats the array as a set — automatically removes duplicates
 # Must run before any PATH modifications so we only expand unique entries
 # ==============================================================================
-typeset -U path PATH fpath FPATH
+typeset -U path PATH fpath FPATH ld_library_path LD_LIBRARY_PATH
 
 # ==============================================================================
 # PATH — user-local directories take priority over system paths
