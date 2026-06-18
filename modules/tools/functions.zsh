@@ -63,6 +63,11 @@ lazyg() {
     return 1
   }
 
+  if [[ "$branch" == "HEAD" ]]; then
+    printf 'Detached HEAD — push skipped. Create or switch to a branch first.\n' >&2
+    return 1
+  fi
+
   gcom "$1" || return 1
 
   [[ ! -t 0 ]] && { printf 'Non-interactive session: push skipped\n' >&2; return 1; }
