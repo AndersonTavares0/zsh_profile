@@ -4,7 +4,11 @@
 # EPOCHREALTIME: float (seconds.µs), multiplied by 1000 → integer ms
 # printf "%.0f": rounds to nearest integer for clean display
 # ==============================================================================
-typeset -g _zshrc_load_ms=$(printf "%.0f" "$(( (EPOCHREALTIME - _zshrc_start_s) * 1000 ))")
+if [[ -n "$_zshrc_start_s" && -n "$EPOCHREALTIME" ]]; then
+  typeset -g _zshrc_load_ms=$(printf "%.0f" "$(( (EPOCHREALTIME - _zshrc_start_s) * 1000 ))")
+else
+  typeset -g _zshrc_load_ms=-1
+fi
 unset _zshrc_start_s
 
 # ==============================================================================
@@ -17,6 +21,11 @@ unset _zshrc_start_s
 # ==============================================================================
 zshrc-time() {
   local ms=$_zshrc_load_ms
+  if (( ms < 0 )); then
+    printf 'Timer unavailable\n'
+    return 1
+  fi
+
   if   (( ms < 150 )); then printf '\e[32m%dms\e[0m (excellent)\n' "$ms"
   elif (( ms < 200 )); then printf '\e[32m%dms\e[0m (good)\n' "$ms"
   elif (( ms < 500 )); then printf '\e[33m%dms\e[0m (acceptable)\n' "$ms"

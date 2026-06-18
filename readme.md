@@ -6,9 +6,9 @@
 [![Powerlevel10k](https://img.shields.io/badge/powerlevel10k-v1.20.0-blue?logo=github)](https://github.com/romkatv/powerlevel10k)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/lint-zsh--n-brightgreen)](#)
-[![Lines](https://img.shields.io/badge/lines-598-informational)](#)
+[![Lines](https://img.shields.io/badge/lines-700%2B-informational)](#)
 
-Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, and in-shell security safeguards. Modular architecture — 14 self-documenting source files.
+Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, Fedora/NVIDIA helpers, and in-shell security safeguards. Modular architecture — 15 self-documenting source files.
 
 ---
 
@@ -61,10 +61,11 @@ Choose [1-3/q]:
 - **Sudo Wrapper** — `sudo !!` re-executes the last command as root with a safety blocklist: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`, and recursive `sudo` are refused.
 
 ### Productivity
-- **14 modular source files** — one concern per file, loaded in strict dependency order with inline documentation explaining every flag and pattern.
+- **15 modular source files** — one concern per file, loaded in strict dependency order with inline documentation explaining every flag and pattern.
 - **eza aliases** — `ls`, `ll`, `la`, `l`, `lt` with icons, git status, and tree view (gracefully skipped when eza is absent).
 - **8 utility functions** — directory navigation (`mkcd`, `up [n]`), git workflow (`gcom`, `lazyg` with 10s push timeout), safe sed with backup (`sedi`), multi-format archive extractor (`extract`), timestamped backups (`bk`), and port scanner (`port`).
-- **System cleanup** — `dnf-clean`, `flatpak-clean`, `sys-clean` for Fedora package maintenance.
+- **System cleanup** — `dnf-clean`, `flatpak-clean`, `sys-clean` for Fedora package maintenance, defined only when the matching tools are installed.
+- **Fedora + NVIDIA helpers** — on-demand GPU status, RPMFusion diagnostics, Akmods rebuild helper, and manual CUDA environment activation.
 - **XDG compliance** — `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` exported so modern CLI tools auto-respect them.
 
 ---
@@ -74,20 +75,25 @@ Choose [1-3/q]:
 ```
 ~/.zshrc                     # Entry point (symlinked by installer)
 ~/.zsh_modules/             # Module directory (symlinked by installer)
-├── prompt.zsh              # ① P10k Instant Prompt (MUST be first)
-├── boot-init.zsh           # ② Wall-clock timer start (EPOCHREALTIME)
-├── environment.zsh         # ③ PATH dedup, user bins, XDG base dirs
-├── shell.zsh               # ④ Zsh options, 50K history, dedup, sharing
-├── security.zsh            # ⑤ History credential filter + sudo wrapper
-├── cache.zsh               # ⑥ Version-fingerprint plugin init cache
-├── omz.zsh                 # ⑦ Oh My Zsh framework, conditional plugins
-├── lazy.zsh                # ⑧ zsh-defer deferred source (optional)
-├── aliases.zsh             # ⑨ eza, grep, navigation, system cleanup
-├── functions.zsh           # ⑩ up, mkcd, nf, gcom, lazyg, sedi, extract, bk, port
-├── local.zsh               # ⑪ ~/.zshrc.local overrides (pre-theme)
-├── theme.zsh               # ⑫ P10k theme (MUST be last substantive source)
-├── compile.zsh             # ⑬ Bytecode compilation (background)
-└── boot-end.zsh            # ⑭ Timer end + zshrc-time display
+├── boot/
+│   ├── prompt.zsh          # ① P10k Instant Prompt (MUST be first)
+│   ├── timer-start.zsh     # ② Wall-clock timer start (EPOCHREALTIME)
+│   ├── theme.zsh           # ⑬ P10k theme (MUST be last substantive source)
+│   ├── compile.zsh         # ⑭ Bytecode compilation (background)
+│   └── timer-end.zsh       # ⑮ Timer end + zshrc-time display
+├── core/
+│   ├── environment.zsh     # ③ PATH/LD_LIBRARY_PATH dedup, user bins, XDG dirs
+│   ├── shell.zsh           # ④ Zsh options, 50K history, dedup, sharing
+│   └── security.zsh        # ⑤ History credential filter + sudo wrapper
+├── plugins/
+│   ├── cache.zsh           # ⑥ Version-fingerprint plugin init cache
+│   ├── omz.zsh             # ⑦ Oh My Zsh framework, conditional plugins
+│   └── lazy.zsh            # ⑧ zsh-defer deferred source (optional)
+└── tools/
+    ├── aliases.zsh         # ⑨ eza, grep, navigation, system cleanup
+    ├── nvidia.zsh          # ⑩ NVIDIA/Fedora GPU helpers + CUDA opt-in
+    ├── functions.zsh       # ⑪ up, mkcd, nf, gcom, lazyg, sedi, extract, bk, port
+    └── local.zsh           # ⑫ ~/.zshrc.local overrides (pre-theme)
 ```
 
 Numbers indicate load order — P10k Instant Prompt must be first, P10k theme must be last. Everything between follows the dependency chain.
@@ -169,6 +175,38 @@ git clone https://github.com/romkatv/zsh-defer $ZSH_CUSTOM/plugins/zsh-defer
 | `flatpak-clean` | Remove unused Flatpak runtimes |
 | `sys-clean` | Both cleanup operations |
 | `reload` | Re-source `~/.zshrc` |
+
+### Fedora + NVIDIA
+
+NVIDIA helpers are optional and on-demand. The module never calls `nvidia-smi` during shell startup, so GPU diagnostics do not affect the sub-150ms startup target.
+
+| Command | Description |
+|---------|-------------|
+| `nvidia-ver` | GPU name, driver version, and total VRAM |
+| `nvidia-stat` | CSV status: temp, utilization, power, memory, pstate |
+| `nvidia-quick` | Compact temp/utilization/memory/power output |
+| `nvidia-watch` | Refresh `nvidia-smi` every 2 seconds |
+| `nvidia-procs` | List GPU compute processes |
+| `nvidia-temp` | Print GPU temperature in Celsius |
+| `nvidia-mem` | Print used/total GPU memory |
+| `nvidia-power` | Print current power draw and power limit |
+| `nvidia-clock` | Print graphics clock, memory clock, and pstate |
+| `nvidia-persistence [on\|off]` | Show or set NVIDIA persistence mode |
+| `nvidia-plimit <watts>` | Set GPU power limit via `sudo nvidia-smi -pl` |
+| `nvidia-rpm` | List installed NVIDIA RPM packages |
+| `nvidia-kmod` | Show loaded NVIDIA kernel modules |
+| `nvidia-update-check` | Check DNF/RPMFusion NVIDIA updates |
+| `nvidia-akmods` | Rebuild NVIDIA Akmods and initramfs with confirmation |
+
+### CUDA
+
+CUDA is not added to `PATH` automatically. Run `cuda-env` only when needed. This avoids global `LD_LIBRARY_PATH` side effects and keeps shell startup fast.
+
+| Command | Description |
+|---------|-------------|
+| `cuda-env` | Add `/usr/local/cuda` and Nsight Compute paths for the current shell |
+| `cuda-use <version>` | Activate a side-by-side CUDA install, such as `cuda-use 12.6` |
+| `cuda-gcc13` | Set `NVCC_CCBIN=g++-13` when Fedora GCC is newer than CUDA supports |
 
 ### File Listing
 

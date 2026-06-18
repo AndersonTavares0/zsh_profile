@@ -63,6 +63,11 @@ lazyg() {
     return 1
   }
 
+  if [[ "$branch" == "HEAD" ]]; then
+    printf 'Detached HEAD — push skipped. Create or switch to a branch first.\n' >&2
+    return 1
+  fi
+
   gcom "$1" || return 1
 
   [[ ! -t 0 ]] && { printf 'Non-interactive session: push skipped\n' >&2; return 1; }
@@ -97,9 +102,12 @@ sedi() {
   local tmp=$(mktemp) || return 1
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file" && \
-    printf 'Modified. Backup: %s\n' "$backup"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
+  local rc=$?
   trap - INT TERM
+
+  [[ $rc -eq 0 ]] && printf 'Modified. Backup: %s\n' "$backup"
+  return $rc
 }
 
 # extract <archive>: auto-detect archive format and extract

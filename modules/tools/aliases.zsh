@@ -50,8 +50,20 @@ alias reload='source ~/.zshrc && printf "✅ .zshrc reloaded\n"'
 # flatpak-clean: remove unused Flatpak runtimes
 # sys-clean:    both cleanup operations in one command
 # -y flag auto-confirms — safe since these only remove unused artifacts
-# Package manager aliases only work on Fedora/RHEL (DNF-based)
+# Package manager aliases only work when the corresponding tool is installed.
 # ==============================================================================
-alias dnf-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "✅ DNF cleaned\n"'
-alias flatpak-clean='flatpak uninstall --unused -y && printf "✅ Flatpak cleaned\n"'
-alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && flatpak uninstall --unused -y && printf "🧹 System cleaned\n"'
+if command -v dnf &>/dev/null; then
+  alias dnf-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "DNF cleaned\n"'
+fi
+
+if command -v flatpak &>/dev/null; then
+  alias flatpak-clean='flatpak uninstall --unused -y && printf "Flatpak cleaned\n"'
+fi
+
+if command -v dnf &>/dev/null && command -v flatpak &>/dev/null; then
+  alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && flatpak uninstall --unused -y && printf "System cleaned\n"'
+elif command -v dnf &>/dev/null; then
+  alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "DNF cleaned\n"'
+elif command -v flatpak &>/dev/null; then
+  alias sys-clean='flatpak uninstall --unused -y && printf "Flatpak cleaned\n"'
+fi

@@ -38,13 +38,14 @@ if [[ -n "$_M" ]]; then
 
   # === TOOLS: user productivity ===
   source "$_M/tools/aliases.zsh"     # ⑨ eza, grep, navigation, system cleanup
-  source "$_M/tools/functions.zsh"   # ⑩ up, mkcd, nf, gcom, lazyg, sedi, extract, bk, port
-  source "$_M/tools/local.zsh"       # ⑪ ~/.zshrc.local overrides (pre-theme, machine-specific)
+  source "$_M/tools/nvidia.zsh"      # ⑩ NVIDIA/Fedora GPU helpers + CUDA opt-in
+  source "$_M/tools/functions.zsh"   # ⑪ up, mkcd, nf, gcom, lazyg, sedi, extract, bk, port
+  source "$_M/tools/local.zsh"       # ⑫ ~/.zshrc.local overrides (pre-theme, machine-specific)
 
   # === BOOT: finalization ===
-  source "$_M/boot/theme.zsh"        # ⑫ P10k theme (MUST be last substantive source)
-  source "$_M/boot/compile.zsh"      # ⑬ Bytecode compilation (background via zcompile &!)
-  source "$_M/boot/timer-end.zsh"    # ⑭ Timer end calculation + zshrc-time display command
+  source "$_M/boot/theme.zsh"        # ⑬ P10k theme (MUST be last substantive source)
+  source "$_M/boot/compile.zsh"      # ⑭ Bytecode compilation (background via zcompile &!)
+  source "$_M/boot/timer-end.zsh"    # ⑮ Timer end calculation + zshrc-time display command
 fi
 
 unset _M
