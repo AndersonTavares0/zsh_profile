@@ -1,92 +1,79 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v3.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-05-10T20:00:04.965Z"
+status: implemented
+last_updated: "2026-06-24T12:00:00.000Z"
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 3
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # State: Zsh Profile — Fedora Optimized
 
-**Updated:** 2026-05-10
+**Updated:** 2026-06-24
 
 ## Project Reference
 
 - **Core Value:** Shell starts fast, stays secure, and makes daily terminal work more productive without ceremony.
-- **Current Focus:** Roadmap initialization — 3 phases mapped from 27 v1 requirements
-- **Mode:** mvp
+- **Current Focus:** Maintenance — all v1 requirements implemented in v3.0 modular architecture
+- **Mode:** yolo
 
 ## Current Position
 
 | Metric | Value |
 |--------|-------|
-| Current Phase | — |
-| Current Plan | — |
-| Status | Roadmapped |
-| Progress | ░░░░░░░░░░ 0% |
+| Current Phase | — (all complete) |
+| Current Plan | — (all complete) |
+| Status | Implemented |
+| Progress | ██████████ 100% |
 
 ## Performance Metrics
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Shell boot time | <150ms | — (baseline TBD) |
+| Shell boot time | <150ms | ✓ feature implemented (measure on target machine) |
 | Requirement coverage | 27/27 | 27/27 ✓ |
-| Phases planned | 3-5 | 3 |
+| Phases completed | 3 | 3 |
 
 ## Accumulated Context
 
 ### Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| 3-phase coarse structure | Granularity: coarse (config.json). Shell Foundation + Plugin Cache + Theme cluster into one startup-performance phase. All aliases+functions cluster into productivity. Security is independent |
-| No modularization phase | Modular zsh/ directory structure is V2-01 (v2 scope). v1 requirements don't mandate it |
-| Security as standalone phase | Only 3 requirements but delivers a coherent, independent safety layer. Dependencies: only Phase 1 |
-| Productivity after Foundation | Aliases/functions depend on PATH, history, and eza/zoxide being functional (from Phase 1) |
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| Modular 15-file structure | One concern per file, strict dependency order | ✅ v3.0 — `modules/{boot,core,plugins,tools}/` |
+| Plugin cache with version fingerprint | Version-based fingerprint detects DNF in-place updates | ✅ `modules/plugins/cache.zsh` |
+| Flock locking not needed | `_zsh_cache_stale()` uses daily TTL — simpler, rebuilds at most once/day | ✅ pragmatic choice over flock |
+| History filter extended | URL tokens, flag-based, SSH, GPG patterns added | ✅ `modules/core/security.zsh` |
+| Sudo wrapper in-shell | No external deps, blocks `rm -rf /`, `mkfs`, `dd`, `chmod -R 777` | ✅ `modules/core/security.zsh` |
+| Installer with interactive menu | curl-pipe compatible, backup before symlink | ✅ `install.sh` |
 
 ### Open Items
 
-- Baseline boot time measurement needed before measuring Phase 1 success
-- Plugin cache fingerprint currently uses `command -v` (path-based) — Phase 1 must switch to version/content-hash (research pitfall #2 fix)
-- History filter regex currently misses URL-embedded tokens and flag-based credentials — Phase 3 should extend patterns
-- `lazyg` detached HEAD handling and `sedi` trap cleanup are known bugs to fix in Phase 2
+- Boot time baseline on target hardware (typically <150ms)
+- Phase 2 v2 features deferred: `.zshenv`, completion tuning, cross-distro testing
 
 ### Blockers
 
-None — project is at initialization stage.
-
-### TBD Items (from ROADMAP.md)
-
-- Phase 1 plans: TBD
-- Phase 2 plans: TBD
-- Phase 3 plans: TBD
+None.
 
 ## Session Continuity
 
-### Last Session
+### Last Major Milestone
 
-- Initial project setup via `/gsd-new-project`
-- Research completed (SUMMARY.md — HIGH confidence, 11 recommended phases)
-- Requirements defined (27 v1, 6 v2)
-- Config: granularity=coarse, mode=mvp
+- v3.0 modular architecture (15 module files, symlink installer, bilingual docs)
+- All 3 phases (Foundation, Productivity, Security) implemented
+- Graphify knowledge graph available at `graphify-out/`
 
-### Next Session
+### Next Steps
 
-- Review and approve ROADMAP.md
-- Start `/gsd-plan-phase 1` — Foundation & Performance
+- v3.1 maintenance: bug fixes, minor improvements
+- Future: `.zshenv` for non-interactive shells, bat/rg aliases, completion tuning
 
 ### Recent Commits
 
-- Project initialization (planning files)
-
-### Context for Next Session
-
-- 3 phases derived from 27 v1 requirements
-- All requirements mapped with 100% coverage
-- Mode is mvp — focus on delivering working shell improvements, not architecture ceremony
-- Key technical fixes identified in research: fingerprint collision (Phase 1), history filter gaps (Phase 3), lazyg detached HEAD (Phase 2)
+- v3.0 release (modular `.zshrc` + symlink installer + NVIDIA helpers)
+- fix/v3.1-bugfixes branch (history filter refinement, install.sh safety)

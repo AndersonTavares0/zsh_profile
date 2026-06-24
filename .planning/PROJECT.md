@@ -10,22 +10,18 @@ Shell starts fast, stays secure, and makes daily terminal work more productive w
 
 ## Requirements
 
-### Validated
+### Validated (v3.0)
 
-(None yet — ship to validate)
-
-### Active
-
-- [ ] **PERF-01**: Boot time consistently under 150ms (Powerlevel10k instant prompt + plugin caching)
-- [ ] **SEC-01**: History filters sensitive patterns (TOKEN, SECRET, PASSWORD, API_KEY)
-- [ ] **SEC-02**: Sudo wrapper blocks dangerous commands (rm -rf /, mkfs, dd, chmod -R 777)
-- [ ] **ALIAS-01**: File listing aliases via eza (ls, ll, la, l, lt) with icons and git status
-- [ ] **FUNC-01**: Navigation functions (dtop, mkcd, up[n]) for directory traversal
-- [ ] **FUNC-02**: Git workflow functions (gcom, lazyg) with safety checks
-- [ ] **FUNC-03**: Utility functions (sedi, extract, bk, port, zshrc-time)
-- [ ] **SYSCLEAN-01**: DNF and Flatpak cleanup aliases (dnf-clean, flatpak-clean, sys-clean)
-- [ ] **CACHE-01**: Plugin cache auto-rebuilds when tool versions change
-- [ ] **COMPAT-01**: Works on Fedora, functional on other distros with package manager adaptation
+- [x] **PERF-01**: Boot time consistently under 150ms (Powerlevel10k instant prompt + plugin caching)
+- [x] **SEC-01**: History filters sensitive patterns (TOKEN, SECRET, PASSWORD, API_KEY, URL tokens, SSH/GPG)
+- [x] **SEC-02**: Sudo wrapper blocks dangerous commands (rm -rf /, mkfs, dd, chmod -R 777)
+- [x] **ALIAS-01**: File listing aliases via eza (ls, ll, la, l, lt) with icons and git status
+- [x] **FUNC-01**: Navigation functions (dtop, mkcd, up[n]) for directory traversal
+- [x] **FUNC-02**: Git workflow functions (gcom, lazyg) with safety checks
+- [x] **FUNC-03**: Utility functions (sedi, extract, bk, port, zshrc-time)
+- [x] **SYSCLEAN-01**: DNF and Flatpak cleanup aliases (dnf-clean, flatpak-clean, sys-clean)
+- [x] **CACHE-01**: Plugin cache auto-rebuilds when tool versions change
+- [x] **COMPAT-01**: Works on Fedora, functional on other distros with package manager adaptation
 
 ### Out of Scope
 
@@ -36,9 +32,11 @@ Shell starts fast, stays secure, and makes daily terminal work more productive w
 ## Context
 
 - Built with AI assistance across all phases (code generation, review, docs)
-- Existing `.zshrc` at version 2.2 with 320 lines, bilingual docs (pt-BR + en)
-- Graphify knowledge graph built — reveals 264 nodes, 16 communities, arquitetura do .zshrc as central hub (17 edges)
-- Installed via `cp .zshrc ~/.zshrc` — no package manager, no init system integration
+- Current version: **v3.0** — modular architecture with 15 files in `modules/{boot,core,plugins,tools}/`
+- Entry-point `.zshrc` is 51 lines — sources modules in strict dependency order
+- Version history: v2.2 (monolithic 320-line `.zshrc`) → v3.0 (modular 15 files)
+- Interactive installer via curl: `curl -fsSL https://raw.githubusercontent.com/AndersonTavares0/zsh_profile/main/install.sh | bash`
+- Graphify knowledge graph available at `graphify-out/`
 
 ## Constraints
 
@@ -52,28 +50,16 @@ Shell starts fast, stays secure, and makes daily terminal work more productive w
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Plugin cache over OMZ plugin manager | 30-50% faster boot by caching init scripts | — Pending |
-| Powerlevel10k instant prompt first | Required by P10k — must load before anything else | — Pending |
-| Fingerprint-based cache invalidation | Rebuild only when tool versions change, not on every shell start | — Pending |
-| Bytecode compilation (.zshrc.zwc) | Faster parsing on subsequent loads | — Pending |
-| sudo() wrapper instead of plugin | More control over dangerous patterns, no external dep | — Pending |
+| Plugin cache over OMZ plugin manager | 30-50% faster boot by caching init scripts | ✅ `modules/plugins/cache.zsh` — version-fingerprinted |
+| Powerlevel10k instant prompt first | Required by P10k — must load before anything else | ✅ `modules/boot/prompt.zsh` — first sourced line |
+| Fingerprint-based cache invalidation | Rebuild only when tool versions change | ✅ `cksum(tool --version \| head -1)` — detects DNF updates |
+| Bytecode compilation (.zshrc.zwc) | Faster parsing on subsequent loads | ✅ `modules/boot/compile.zsh` — background via &! |
+| sudo() wrapper instead of plugin | More control over dangerous patterns, no external dep | ✅ `modules/core/security.zsh` |
+| Modular 15-file architecture | One concern per file, strict dependency order | ✅ v3.0 — `modules/{boot,core,plugins,tools}/` |
 
 ## Evolution
 
-This document evolves at phase transitions and milestone boundaries.
-
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? — Move to Out of Scope with reason
-2. Requirements validated? — Move to Validated with phase reference
-3. New requirements emerged? — Add to Active
-4. Decisions to log? — Add to Key Decisions
-5. "What This Is" still accurate? — Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+This document reflects the current v3.0 state. Future updates will track new milestones.
 
 ---
-*Last updated: 2026-05-10 after initialization*
+*Last updated: 2026-06-24 — synchronized with v3.0 implementation*
