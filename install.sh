@@ -199,7 +199,7 @@ do_uninstall() {
 show_menu() {
   echo ""
   printf "${BOLD}${CYAN}╔══════════════════════════════════════════╗${NC}\n"
-  printf "${BOLD}${CYAN}║        Zsh Profile — Fedora v3.0        ║${NC}\n"
+  printf "${BOLD}${CYAN}║        Zsh Profile — Fedora v3.1        ║${NC}\n"
   printf "${BOLD}${CYAN}╠══════════════════════════════════════════╣${NC}\n"
   printf "${BOLD}${CYAN}║                                          ║${NC}\n"
   printf "${BOLD}${CYAN}║  ${GREEN}[1] Install${NC}                               ${BOLD}${CYAN}║${NC}\n"
