@@ -6,7 +6,7 @@
 [![Powerlevel10k](https://img.shields.io/badge/powerlevel10k-v1.20.0-blue?logo=github)](https://github.com/romkatv/powerlevel10k)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![ShellCheck](https://img.shields.io/badge/lint-zsh--n-brightgreen)](#)
-[![Lines](https://img.shields.io/badge/lines-700%2B-informational)](#)
+[![Lines](https://img.shields.io/badge/lines-800%2B-informational)](#)
 
 Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, Fedora/NVIDIA helpers, and in-shell security safeguards. Modular architecture — 15 self-documenting source files.
 
@@ -57,7 +57,7 @@ Choose [1-3/q]:
 ### Security
 - **History Filter** (`zshaddhistory` hook) — silently blocks credential patterns from history:
   env vars (TOKEN, SECRET, API_KEY, ...), URL-embedded tokens (`https://user:pass@host`),
-  flag-based credentials (`--token`, `--password`, `-p`), SSH key material, and GPG passphrase commands. Also blocks commands &gt;4096 chars.
+  flag-based credentials (`--token`, `--password`), SSH key material, and GPG passphrase commands. Also blocks commands &gt;4096 chars.
 - **Sudo Wrapper** — `sudo !!` re-executes the last command as root with a safety blocklist: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`, and recursive `sudo` are refused.
 
 ### Productivity
