@@ -76,7 +76,7 @@ _zsh_cache_stale() {
   fi
   # Re-check fingerprint once per day (86400 seconds)
   local now=$EPOCHSECONDS
-  local last=$(stat -c %Y "$check_file" 2>/dev/null || stat -f %m "$check_file" 2>/dev/null || echo 0)
+  local last=$(stat -c %Y "$check_file" 2>/dev/null || stat -f %m "$check_file" 2>/dev/null || date -r "$check_file" +%s 2>/dev/null || echo 0)
   if (( now - last > 86400 )); then
     touch "$check_file" 2>/dev/null; return 0
   fi

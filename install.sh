@@ -78,6 +78,9 @@ do_install_omz() {
   if [[ -d "$HOME/.oh-my-zsh" ]]; then
     printf "${YELLOW}Oh My Zsh already installed.${NC}\n"; return 0
   fi
+  if ! command -v curl &>/dev/null; then
+    printf "${RED}curl is required to install Oh My Zsh.${NC}\n"; return 1
+  fi
   printf "${CYAN}Installing Oh My Zsh...${NC}\n"
   RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
@@ -110,6 +113,16 @@ do_install_plugins() {
 do_link_config() {
   ensure_repo
   printf "${CYAN}Linking config...${NC}\n"
+
+  # Backup existing files before symlinking (never overwrite without copy)
+  for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
+    if [[ -e "$f" && ! -L "$f" ]]; then
+      local bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
+      cp -r "$f" "$bak" 2>/dev/null || true
+      printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+    fi
+  done
+
   ln -sf "$REPO_DIR/.zshrc"       "$HOME/.zshrc"
   ln -sfn "$REPO_DIR/modules"     "$HOME/.zsh_modules"
   printf "${GREEN}~/.zshrc → repo .zshrc${NC}\n"
@@ -186,7 +199,7 @@ do_uninstall() {
 show_menu() {
   echo ""
   printf "${BOLD}${CYAN}╔══════════════════════════════════════════╗${NC}\n"
-  printf "${BOLD}${CYAN}║        Zsh Profile — Fedora v3.0        ║${NC}\n"
+  printf "${BOLD}${CYAN}║        Zsh Profile — Fedora v3.1        ║${NC}\n"
   printf "${BOLD}${CYAN}╠══════════════════════════════════════════╣${NC}\n"
   printf "${BOLD}${CYAN}║                                          ║${NC}\n"
   printf "${BOLD}${CYAN}║  ${GREEN}[1] Install${NC}                               ${BOLD}${CYAN}║${NC}\n"

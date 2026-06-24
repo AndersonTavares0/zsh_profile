@@ -42,7 +42,7 @@ fi
 alias home='cd ~'
 alias docs='cd ~/Documents'
 alias dtop='cd ~/Desktop'
-alias reload='source ~/.zshrc && printf "✅ .zshrc reloaded\n"'
+alias reload='source ~/.zshrc && printf "[OK] .zshrc reloaded\n"'
 
 # ==============================================================================
 # Aliases — Fedora System Cleanup
