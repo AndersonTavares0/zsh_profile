@@ -25,9 +25,10 @@ zshaddhistory() {
   # Block URL-embedded credentials: http[s]://user:token@host
   [[ "$cmd" =~ https?://[^[:space:]]+:[^[:space:]]+@ ]] && return 1
 
-  # Block flag-based credentials: --token <val>, --password <val>, -p <val>
+  # Block flag-based credentials: --token <val>, --password <val>, --secret <val>
+  # Nota: -p <val> removido intencionalmente — ambíguo demais (ssh -p, ping -p, tar -p)
+  # Causava falsos positivos em comandos legítimos comuns
   [[ "$cmd" =~ --(token|password|secret|api-key|access-key)[[:space:]]+[^[:space:]-] ]] && return 1
-  [[ "$cmd" =~ (^|[[:space:]])-p[[:space:]]+[^[:space:]-] ]] && return 1
 
   # Block SSH key generation and GPG passphrase exposure
   [[ "$upper" =~ (SSH-KEYGEN|SSH-ADD[[:space:]]+.*\.SSH|/ETC/SSH/|~?/\.SSH/ID_) ]] && return 1
