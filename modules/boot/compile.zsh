@@ -13,15 +13,17 @@ _zsh_compile_all() {
     zcompile -U ~/.zshrc &>/dev/null &!
   fi
 
-  # Batch-compile all modules if the directory changed
+  # Batch-compile all modules in a single background subshell
+  # Avoids spawning N separate processes (one per stale module)
   local mod_dir="$HOME/.zsh_modules"
   [[ -z "$mod_dir" || ! -d "$mod_dir" ]] && return
 
-  # Compile each module individually for granular cache invalidation
-  for src in "$mod_dir"/**/*.zsh(.N); do
-    local zwc="${src}.zwc"
-    [[ ! -f "$zwc" || "$src" -nt "$zwc" ]] && zcompile -U "$src" &>/dev/null &!
-  done
+  (
+    for src in "$mod_dir"/**/*.zsh(.N); do
+      local zwc="${src}.zwc"
+      [[ ! -f "$zwc" || "$src" -nt "$zwc" ]] && zcompile -U "$src" 2>/dev/null
+    done
+  ) &!
 }
 
 _zsh_compile_all
