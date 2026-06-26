@@ -77,7 +77,7 @@ lazyg() {
     return 1
   }
 
-  if [[ "$confirm" =~ ^[yY]$ ]]; then
+  if [[ "$confirm" =~ ^[sSyY]$ ]]; then
     git push origin "$branch" && printf 'Pushed!\n'
   else
     printf 'Push skipped — commit kept locally.\n'
