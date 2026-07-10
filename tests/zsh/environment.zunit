@@ -42,3 +42,10 @@
 
   assert "$XDG_DATA_HOME" same_as "$expected"
 }
+
+@test 'environment.zsh declares typeset -U path in source' {
+  run grep 'typeset -U path' "$ZSH_PROFILE_ROOT/modules/core/environment.zsh"
+
+  assert $state equals 0
+  assert $output is_not_empty
+}

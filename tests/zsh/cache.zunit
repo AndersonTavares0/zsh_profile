@@ -37,3 +37,25 @@
 
   assert $state equals 0
 }
+
+@test 'cache file resolves to XDG_CACHE_HOME path when set' {
+  source "$ZSH_PROFILE_ROOT/modules/plugins/cache.zsh"
+
+  expected="$XDG_CACHE_HOME/zsh_plugins_init.zsh"
+
+  run test -f "$expected"
+
+  assert $state equals 0
+}
+
+@test 'cache file falls back to HOME/.cache when XDG_CACHE_HOME unset' {
+  unset XDG_CACHE_HOME
+
+  source "$ZSH_PROFILE_ROOT/modules/plugins/cache.zsh"
+
+  expected="$HOME/.cache/zsh_plugins_init.zsh"
+
+  run test -f "$expected"
+
+  assert $state equals 0
+}
