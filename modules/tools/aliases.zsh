@@ -45,25 +45,29 @@ alias dtop='cd ~/Desktop'
 alias reload='source ~/.zshrc && printf "[OK] .zshrc reloaded\n"'
 
 # ==============================================================================
-# Aliases — Fedora System Cleanup
-# dnf-clean:    autoremove orphaned packages, then clean DNF cache
-# flatpak-clean: remove unused Flatpak runtimes
-# sys-clean:    both cleanup operations in one command
-# -y flag auto-confirms — safe since these only remove unused artifacts
-# Package manager aliases only work when the corresponding tool is installed.
+# Aliases — System Cleanup (platform-adaptive)
+# Fedora-first with fallbacks for apt (Debian/Ubuntu) and brew (macOS/Homebrew)
 # ==============================================================================
 if command -v dnf &>/dev/null; then
   alias dnf-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "DNF cleaned\n"'
+fi
+
+if command -v apt &>/dev/null; then
+  alias apt-clean='sudo apt autoremove -y && sudo apt autoclean && printf "APT cleaned\n"'
 fi
 
 if command -v flatpak &>/dev/null; then
   alias flatpak-clean='flatpak uninstall --unused -y && printf "Flatpak cleaned\n"'
 fi
 
-if command -v dnf &>/dev/null && command -v flatpak &>/dev/null; then
-  alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && flatpak uninstall --unused -y && printf "System cleaned\n"'
-elif command -v dnf &>/dev/null; then
-  alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "DNF cleaned\n"'
-elif command -v flatpak &>/dev/null; then
-  alias sys-clean='flatpak uninstall --unused -y && printf "Flatpak cleaned\n"'
+if command -v brew &>/dev/null; then
+  alias brew-clean='brew cleanup -s && printf "Homebrew cleaned\n"'
+fi
+
+if command -v dnf &>/dev/null; then
+  alias sys-clean='sudo dnf autoremove -y && sudo dnf clean all && printf "System cleaned\n"'
+elif command -v apt &>/dev/null; then
+  alias sys-clean='sudo apt autoremove -y && sudo apt autoclean && printf "System cleaned\n"'
+elif command -v brew &>/dev/null; then
+  alias sys-clean='brew cleanup -s && printf "System cleaned\n"'
 fi

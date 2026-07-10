@@ -180,3 +180,31 @@
 
   assert $state equals 0
 }
+
+@test 'port with non-numeric argument prints error and returns 1' {
+  run port abc
+
+  assert $state equals 1
+  assert $output matches 'valid port number'
+}
+
+@test 'port with out-of-range number prints error and returns 1' {
+  run port 99999
+
+  assert $state equals 1
+  assert $output matches 'valid port number'
+}
+
+@test 'port with zero prints error and returns 1' {
+  run port 0
+
+  assert $state equals 1
+  assert $output matches 'valid port number'
+}
+
+@test 'port with no argument lists all ports (uses ss on Linux)' {
+  run port
+
+  assert $state equals 0
+  assert $output is_not_empty
+}

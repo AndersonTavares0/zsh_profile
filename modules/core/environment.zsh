@@ -11,7 +11,14 @@ typeset -U path PATH fpath FPATH ld_library_path LD_LIBRARY_PATH
 # ~/.local/bin: pip install --user, local scripts
 # ~/bin:         manual binary drops
 # ~/.spicetify:  Spicetify CLI (Spotify customization tool)
+# macOS Homebrew: /opt/homebrew/bin (ARM) or /usr/local/bin (Intel) if present
 export PATH="$HOME/.opencode/bin:$HOME/.local/bin:$HOME/bin:$HOME/.spicetify:$PATH"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  if [[ -d /opt/homebrew/bin ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+  fi
+fi
 
 # ==============================================================================
 # XDG Base Directory Specification
