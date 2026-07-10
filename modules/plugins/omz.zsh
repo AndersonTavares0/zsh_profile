@@ -7,12 +7,13 @@
 #   ZSH_DISABLE_COMPFIX=true — skips compaudit (~7ms saved per shell start).
 #     compaudit checks completion directory ownership/permissions; unnecessary
 #     on single-user machines. Safe to skip — completion still works.
-#   DISABLE_AUTO_UPDATE=true — skips OMZ auto-update check on shell start.
+#   zstyle ':omz:update' mode disabled — disables OMZ auto-update prompt.
+#     zstyle is the recommended OMZ method (survives framework internal changes).
 # ==============================================================================
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME=""
 ZSH_DISABLE_COMPFIX=true
-DISABLE_AUTO_UPDATE=true
+zstyle ':omz:update' mode disabled
 
 # ==============================================================================
 # OMZ Plugins
