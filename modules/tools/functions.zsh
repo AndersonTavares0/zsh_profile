@@ -89,9 +89,9 @@ lazyg() {
 # ==============================================================================
 
 # sedi "s/old/new/g" <file>: safe sed with automatic timestamped backup
-# mktemp: secure temp file (avoids predictable names in shared /tmp)
+# mktemp: creates temp file in target's directory (avoids cross-device mv failure)
+# chmod --reference: preserves original file permissions on modified file
 # trap INT TERM: cleanup temp file on Ctrl+C or kill signal
-# cp + sed + mv: atomic pattern — backup first, then replace via temp file
 # trap - INT TERM: reset trap after successful operation
 sedi() {
   [[ "$#" -ne 2 ]] && { printf 'Usage: sedi "s/old/new/g" <file>\n' >&2; return 1; }
@@ -99,10 +99,10 @@ sedi() {
 
   local pattern="$1" file="$2"
   local backup="${file}.bak.$(date +%Y%m%d%H%M%S)"
-  local tmp=$(mktemp) || return 1
+  local tmp=$(mktemp "${file}.tmp.XXXXXX") || return 1
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && chmod --reference="$file" "$tmp" && mv "$tmp" "$file"
   local rc=$?
   trap - INT TERM
 

@@ -79,3 +79,28 @@
 
   assert $state equals 0
 }
+
+@test 'sedi creates temp file in target directory, not /tmp' {
+  workdir="$ZUNIT_HOME/sedi-test"
+  mkdir -p "$workdir"
+  target="$workdir/target.txt"
+  printf 'hello\n' > "$target"
+  original_mode=$(stat -c '%a' "$target" 2>/dev/null || stat -f '%Lp' "$target" 2>/dev/null)
+
+  run sedi 's/hello/world/' "$target"
+
+  assert $state equals 0
+
+  # Verify content changed
+  run cat "$target"
+  assert $state equals 0
+  assert $output same_as 'world'
+
+  # Verify backup exists
+  run test -f "$workdir/target.txt.bak."*
+  assert $state equals 0
+
+  # Verify mode preserved
+  new_mode=$(stat -c '%a' "$target" 2>/dev/null || stat -f '%Lp' "$target" 2>/dev/null)
+  assert "$new_mode" same_as "$original_mode"
+}
