@@ -19,8 +19,8 @@
   assert $output is_not_empty
 }
 
-@test 'sudo function is defined (shadowing external binary)' {
-  run typeset -f sudo
+@test 'sudo-last function is defined after sourcing security.zsh' {
+  run typeset -f sudo-last
 
   assert $state equals 0
   assert $output is_not_empty
@@ -50,11 +50,26 @@
   assert $state equals 1
 }
 
-@test 'sudo function blocks rm -rf / via !! detection' {
+@test 'sudo-last previews the last command and blocks dangerous patterns' {
   fc -R =(print 'rm -rf /' | cat)
 
-  run sudo '!!'
+  run sudo-last
 
   assert $state equals 1
-  assert $output matches 'Blocked by security'
+  assert $output matches 'Blocked'
+}
+
+@test 'sudo-last shows preview of last command and requests confirmation' {
+  fc -R =(print 'ls -la' | cat)
+
+  run sudo-last
+
+  assert $state equals 0
+  assert $output matches 'Confirm'
+}
+
+@test 'sudo function is not defined as a shell function' {
+  run typeset -f sudo
+
+  assert $state equals 1
 }
