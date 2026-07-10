@@ -67,14 +67,14 @@ same script supports Linux and macOS with the system Bash 3.2 or newer.
 
 ### Security
 - **History Filter** (`zshaddhistory` hook) — silently blocks credential patterns from history:
-  env vars (TOKEN, SECRET, API_KEY, ...), URL-embedded tokens (`https://user:pass@host`),
-  flag-based credentials (`--token`, `--password`), SSH key material, and GPG passphrase commands. Also blocks commands &gt;4096 chars.
+  env vars (TOKEN, SECRET, PASSWORD, API_KEY, PRIVATE_KEY, CREDENTIAL, ...), URL-embedded tokens (`https://user:pass@host`),
+  flag-based credentials (`--token`, `--password`, `--secret`, `--api-key`, `--access-key`), SSH key material, GPG passphrase commands, and AWS CLI credentials. Also blocks commands &gt;4096 chars.
 - **Sudo Guard** (`sudo-last` function) — previews the last history command, asks for confirmation, and blocks dangerous patterns: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. Use `--yes` to skip the prompt in scripts.
 
 ### Productivity
 - **15 modular source files** — one concern per file, loaded in strict dependency order with inline documentation explaining every flag and pattern.
 - **eza aliases** — `ls`, `ll`, `la`, `l`, `lt` with icons, git status, and tree view (gracefully skipped when eza is absent).
-- **8 utility functions** — directory navigation (`mkcd`, `up [n]`), git workflow (`gcom`, `lazyg` with 10s push timeout), safe sed with backup (`sedi`), multi-format archive extractor (`extract`), timestamped backups (`bk`), and port scanner (`port`).
+- **9 utility functions** — directory navigation (`mkcd`, `up [n]`), git workflow (`gcom`, `lazyg` with 10s push timeout), safe sed with backup (`sedi`), multi-format archive extractor (`extract`), timestamped backups (`bk`), empty file creator (`nf`), and port scanner (`port`).
 - **System cleanup** — `dnf-clean`, `apt-clean`, `brew-clean`, `flatpak-clean`, `sys-clean` — platform-adaptive, defined only when the corresponding tool is installed.
 - **Fedora + NVIDIA helpers** — on-demand GPU status, RPMFusion diagnostics, Akmods rebuild helper, and manual CUDA environment activation.
 - **XDG compliance** — `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` exported so modern CLI tools auto-respect them.
@@ -251,6 +251,7 @@ Each module file is self-documenting: comments explain what every flag, option, 
 | RHEL / CentOS Stream | Works (DNF-based, same packages) |
 | Debian / Ubuntu | Works with `apt` (installer auto-detects) |
 | Arch Linux | Works with `pacman` (installer auto-detects) |
+| openSUSE / SUSE | Works with `zypper` (installer auto-detects) |
 
 ---
 

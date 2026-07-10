@@ -77,13 +77,13 @@ Configures Zsh options and history:
 
 - `AUTO_CD`: cd by typing directory name alone
 - `EXTENDED_GLOB`: `#`, `~`, `^` operators for pattern matching
-- History options: `INC_APPEND_HISTORY` (write immediately), `SHARE_HISTORY` (share across sessions in real-time), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
+- History options: `SHARE_HISTORY` (share across sessions in real-time), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
 - `HISTSIZE=50000`, `SAVEHIST=50000`, `HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"`
 ### core/security.zsh (⑤)
 
 Two independent security layers:
 
-**History Filter** (`zshaddhistory` hook): Blocks commands from being saved to HISTFILE based on 9 pattern groups:
+**History Filter** (`zshaddhistory` hook): Blocks commands from being saved to HISTFILE based on 7 pattern groups:
 
 | Pattern | Matches |
 |---------|---------|
@@ -157,7 +157,7 @@ Conditionally defines aliases (guarded by `command -v`). Groups:
 | Navigation | `home`, `docs`, `dtop`, `reload` | none (static) |
 | System cleanup | `dnf-clean`, `apt-clean`, `brew-clean`, `flatpak-clean`, `sys-clean` (platform-adaptive) | `dnf`, `apt`, `brew`, `flatpak` |
 
-The `sys-clean` alias has 3 variants: both DNF+Flatpak available, DNF only, Flatpak only.
+The `sys-clean` alias has 3 variants: first available package manager (dnf > apt > brew).
 
 ### tools/nvidia.zsh (⑩)
 
@@ -173,7 +173,7 @@ Aliases (guarded by `nvidia-smi`):
 | `nvidia-watch` | `watch -n2 nvidia-smi` |
 | `nvidia-procs` | GPU compute processes |
 
-Functions (unguarded, error gracefully outside Nvidia systems):
+Functions (guarded by `command -v nvidia-smi`, defined only on NVIDIA systems):
 
 | Function | Purpose |
 |----------|---------|
@@ -318,9 +318,9 @@ Some configurations use `flock` (file lock) to prevent multiple simultaneous she
 - Race condition handling code
 - Lock file cleanup on crash
 
-### `INC_APPEND_HISTORY` + `SHARE_HISTORY`
+### `SHARE_HISTORY`
 
-Both options are enabled together. `INC_APPEND_HISTORY` writes each command to HISTFILE immediately. `SHARE_HISTORY` syncs history across all sessions in real-time via IPC notification. Together they provide immediate persistence and cross-session visibility — commands from one session appear in others without delay.
+`SHARE_HISTORY` is the only explicitly set history-sharing option. It syncs history across all sessions in real-time via IPC notification, providing immediate cross-session visibility — commands from one session appear in others without delay.
 
 ### `-p` Removed from History Filter
 
@@ -367,7 +367,7 @@ trap - INT TERM
 |---|-----------|-----------|
 | P1 | Zero output before P10k Instant Prompt | boot/prompt.zsh |
 | P2 | Internal globals use `_` prefix; cross-module use `typeset -g` | timer-start.zsh, cache.zsh |
-| P3 | Clean up internal state after use | cache.zsh:88, timer-end.zsh:8, functions.zsh:100 |
+| P3 | Clean up internal state after use | cache.zsh:132, timer-end.zsh:12, functions.zsh:113+117 |
 | P4 | One concern per file | All 15 modules |
 | P5 | Fail gracefully on missing dependencies | aliases.zsh, cache.zsh, omz.zsh, lazy.zsh |
 | P6 | Atomic write pattern for all cache/backup ops | cache.zsh, functions.zsh |
@@ -470,12 +470,13 @@ main()
 
 do_quick_install():
   1. detect_pkg_manager()       → auto-detect: dnf/apt/pacman/zypper
-  2. do_install_packages()      → install zsh, git, eza, fzf, zoxide
-  3. do_install_omz()           → curl Oh My Zsh (skips if exists)
-  4. do_install_p10k()          → git clone powerlevel10k (skips if exists)
-  5. do_install_plugins()       → git clone zsh-autosuggestions, syntax-highlighting, zsh-defer
-  6. do_link_config()           → backup → ln -sf
-  7. do_set_shell()             → chsh -s zsh
+  2. do_install_required()      → install zsh, git
+  3. do_install_optional()      → install eza, fzf, zoxide
+  4. do_install_omz()           → curl Oh My Zsh (skips if exists)
+  5. do_install_p10k()          → git clone powerlevel10k (skips if exists)
+  6. do_install_plugins()       → git clone zsh-autosuggestions, syntax-highlighting, zsh-defer
+  7. do_link_config()           → backup → ln -sf
+  8. do_set_shell()             → chsh -s zsh
 ```
 
 ### Curl-pipe Detection

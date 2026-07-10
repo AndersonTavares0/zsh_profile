@@ -13,7 +13,7 @@
 - `port [num]` - Check port usage (ss -tulpn)
 - `dnf-clean` - Remove orphaned deps and clean DNF cache
 - `flatpak-clean` - Remove unused Flatpak runtimes
-- `sys-clean` - Run both DNF and Flatpak cleanup
+- `sys-clean` - Run first available of dnf/apt/brew
 
 ## Critical Execution Order
 1. Powerlevel10k instant prompt MUST be first in .zshrc
@@ -45,8 +45,8 @@
   - ≥500ms: Slow
 
 ## Security Features
-- History filtering: Blocks commands containing TOKEN, SECRET, PASSWORD etc.
-- Sudo protection: Blocks sudo rm -rf /, mkfs, dd of=, chmod -R 777 /, and recursive sudo
+- History filtering: Blocks commands containing TOKEN, SECRET, PASSWORD, API_KEY, PRIVATE_KEY, CREDENTIAL, flag-based credentials, URL-embedded tokens, SSH keys, GPG passphrase commands
+- Sudo protection: sudo-last function blocks recursive sudo, rm -rf /, mkfs, dd of=, chmod -R 777 /
 - All sudo !! executions show warning and require confirmation for dangerous patterns
 
 ## Important Files
@@ -143,8 +143,8 @@ Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. F
 | Layer | What It Protects | Implementation |
 |-------|-----------------|----------------|
 | History filter | Credentials in commands | `zshaddhistory()` hook — case-insensitive regex match on TOKEN, SECRET, PASSWORD, API_KEY, etc. |
-| Sudo wrapper | Dangerous root commands | Zsh function wrapping `sudo`. Blocks recursive sudo, `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. |
-| History dedup | Sensitive command proliferation | `setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS` |
+| Sudo wrapper | Dangerous root commands | Zsh function wrapping `sudo`. Blocks recursive sudo, `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. Also blocks commands with `|` and `&&` chains. |
+| History dedup | Sensitive command proliferation | `setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS HIST_EXPIRE_DUPS_FIRST HIST_REDUCE_BLANKS` |
 ## What NOT to Use and Why
 | Technology | Reason to Avoid |
 |------------|-----------------|
