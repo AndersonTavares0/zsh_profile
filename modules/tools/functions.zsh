@@ -42,7 +42,8 @@ nf() {
 # ==============================================================================
 
 # gcom "message": stage all changes and commit with message
-# git rev-parse --git-dir: checks if we're inside a git repo
+# git add -A: stages all changes (including deletions) from repo root,
+# regardless of current working directory
 # git status --porcelain: returns empty string if working tree is clean
 # Fails on clean repo (no empty commits) — requires changes to exist
 gcom() {
@@ -54,7 +55,7 @@ gcom() {
     return 1
   fi
 
-  git add . && git commit -m "$1"
+  git add -A && git commit -m "$1"
 }
 
 # lazyg "message": commit all changes, then optionally push to origin

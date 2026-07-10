@@ -146,3 +146,22 @@
   new_mode=$(stat -c '%a' "$target" 2>/dev/null || stat -f '%Lp' "$target" 2>/dev/null)
   assert "$new_mode" same_as "$original_mode"
 }
+
+@test 'gcom stages changes from repo root via git add -A' {
+  repodir="$ZUNIT_HOME/gcom-test"
+  mkdir -p "$repodir/sub"
+  git -C "$repodir" init -q
+  git -C "$repodir" config user.email "test@test"
+  git -C "$repodir" config user.name "Test"
+
+  printf 'root-file\n' > "$repodir/root.txt"
+  printf 'sub-file\n' > "$repodir/sub/sub.txt"
+
+  cd "$repodir/sub"
+  gcom "test commit"
+  cd "$ZUNIT_HOME"
+
+  run git -C "$repodir" log --oneline
+  assert $state equals 0
+  assert "$output" is_not_empty
+}
