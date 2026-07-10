@@ -30,3 +30,7 @@ Thumbs.db
 
 # --- Graphify Knowledge Graph ---
 graphify-out/
+
+# --- Test Dependencies ---
+# The harness normally uses the XDG cache, but also ignore a local override.
+.test-deps/
