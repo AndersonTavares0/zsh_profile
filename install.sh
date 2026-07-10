@@ -81,17 +81,30 @@ read_choice() {
 
 # ─── Install ─────────────────────────────────────────────────────────────────
 
-do_install_packages() {
+do_install_required() {
   local pkg="$1"
-  printf "${CYAN}Installing system packages...${NC}\n"
+  printf "${CYAN}Installing required packages (zsh, git)...${NC}\n"
   case "$pkg" in
-    dnf)    sudo dnf install -y zsh git eza fzf zoxide ;;
-    apt)    sudo apt update && sudo apt install -y zsh git eza fzf zoxide ;;
-    pacman) sudo pacman -S --noconfirm zsh git eza fzf zoxide ;;
-    zypper) sudo zypper install -y zsh git eza fzf zoxide ;;
-    *)      printf "${RED}Unknown package manager. Install manually: zsh git eza fzf zoxide${NC}\n"; return 1 ;;
+    dnf)    sudo dnf install -y zsh git ;;
+    apt)    sudo apt update && sudo apt install -y zsh git ;;
+    pacman) sudo pacman -S --noconfirm zsh git ;;
+    zypper) sudo zypper install -y zsh git ;;
+    *)      printf "${RED}Unknown package manager. Install zsh and git manually.${NC}\n"; return 1 ;;
   esac
-  printf "${GREEN}Packages installed.${NC}\n"
+  printf "${GREEN}Required packages installed.${NC}\n"
+}
+
+do_install_optional() {
+  local pkg="$1"
+  local tools="eza fzf zoxide"
+  printf "${CYAN}Installing optional tools (${tools})...${NC}\n"
+  case "$pkg" in
+    dnf)    sudo dnf install -y eza fzf zoxide || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    apt)    sudo apt install -y eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    pacman) sudo pacman -S --noconfirm eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    zypper) sudo zypper install -y eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    *)      printf "${YELLOW}Unknown package manager — skipping optional tools${NC}\n" ;;
+  esac
 }
 
 do_install_omz() {
@@ -116,17 +129,25 @@ do_install_p10k() {
 
 do_install_plugins() {
   local base="$ZSH_CUSTOM/plugins"
-  declare -A plugin_urls=(
-    [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
-    [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
-    [zsh-defer]="https://github.com/romkatv/zsh-defer"
+  local plugin_names=(
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zsh-defer
   )
-  for plugin in "${!plugin_urls[@]}"; do
-    if [[ -d "$base/$plugin" ]]; then
-      printf "${YELLOW}$plugin already installed.${NC}\n"; continue
+  local plugin_urls=(
+    "https://github.com/zsh-users/zsh-autosuggestions"
+    "https://github.com/zsh-users/zsh-syntax-highlighting"
+    "https://github.com/romkatv/zsh-defer"
+  )
+  local i
+  for ((i=0; i<${#plugin_names[@]}; i++)); do
+    local name="${plugin_names[i]}"
+    local url="${plugin_urls[i]}"
+    if [[ -d "$base/$name" ]]; then
+      printf "${YELLOW}$name already installed.${NC}\n"; continue
     fi
-    printf "${CYAN}Installing $plugin...${NC}\n"
-    git clone "${plugin_urls[$plugin]}" "$base/$plugin"
+    printf "${CYAN}Installing $name...${NC}\n"
+    git clone "$url" "$base/$name"
   done
 }
 
@@ -147,7 +168,7 @@ do_link_config() {
   done
 
   ln -sf "$REPO_DIR/.zshrc"       "$HOME/.zshrc"
-  ln -sfn "$REPO_DIR/modules"     "$HOME/.zsh_modules"
+  ln -sf "$REPO_DIR/modules"     "$HOME/.zsh_modules"
   printf "${GREEN}~/.zshrc → repo .zshrc${NC}\n"
   printf "${GREEN}~/.zsh_modules → repo modules/${NC}\n"
 }
@@ -163,7 +184,8 @@ do_set_shell() {
 do_quick_install() {
   local pkg=$(detect_pkg_manager)
   printf "${CYAN}Package manager: ${BOLD}$pkg${NC}\n"
-  do_install_packages "$pkg"
+  do_install_required "$pkg"
+  do_install_optional "$pkg"
   do_install_omz
   do_install_p10k
   do_install_plugins
