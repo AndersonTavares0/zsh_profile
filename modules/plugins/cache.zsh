@@ -49,16 +49,41 @@ _zsh_build_plugin_cache() {
   # zoxide: generates `z` and `zi` commands + hook functions
   if command -v zoxide &>/dev/null; then
     printf '\n# --- zoxide ---\n' >> "$tmp"
-    zoxide init zsh >> "$tmp" 2>/dev/null
+    if zoxide init zsh >> "$tmp" 2>/dev/null; then
+      : # init succeeded
+    else
+      printf '# zoxide init failed — section skipped\n' >> "$tmp"
+    fi
   fi
 
   # fzf: Ctrl-R history search, Ctrl-T file search, Alt-C directory jump
+  # Uses fzf-share for portable path resolution (fzf >= 0.48), falls back
+  # to distro-specific paths for older versions
   if command -v fzf &>/dev/null; then
     printf '\n# --- fzf ---\n' >> "$tmp"
-    [[ -f /usr/share/fzf/shell/key-bindings.zsh ]] && \
-      printf 'source /usr/share/fzf/shell/key-bindings.zsh\n' >> "$tmp"
-    [[ -f /usr/share/zsh/site-functions/_fzf ]] && \
-      printf 'source /usr/share/zsh/site-functions/_fzf\n' >> "$tmp"
+    local fzf_key_bindings=""
+    local fzf_completion=""
+
+    # Try fzf's native path resolution first (portable across distros/Homebrew)
+    if command -v fzf-share &>/dev/null; then
+      local fzf_share_dir=$(fzf-share)
+      [[ -f "$fzf_share_dir/key-bindings.zsh" ]] && fzf_key_bindings="$fzf_share_dir/key-bindings.zsh"
+      [[ -f "$fzf_share_dir/completion.zsh" ]] && fzf_completion="$fzf_share_dir/completion.zsh"
+    fi
+
+    # Fallback: distro-specific paths (Fedora, Debian, Homebrew)
+    [[ -z "$fzf_key_bindings" ]] && \
+      for dir in /usr/share/fzf/shell /opt/homebrew/opt/fzf/shell /usr/local/opt/fzf/shell; do
+        if [[ -f "$dir/key-bindings.zsh" ]]; then fzf_key_bindings="$dir/key-bindings.zsh"; break; fi
+      done
+
+    [[ -z "$fzf_completion" ]] && \
+      for dir in /usr/share/zsh/site-functions /opt/homebrew/share/zsh/site-functions /usr/local/share/zsh/site-functions; do
+        if [[ -f "$dir/_fzf" ]]; then fzf_completion="$dir/_fzf"; break; fi
+      done
+
+    [[ -n "$fzf_key_bindings" ]] && printf 'source %s\n' "$fzf_key_bindings" >> "$tmp"
+    [[ -n "$fzf_completion" ]] && printf 'source %s\n' "$fzf_completion" >> "$tmp"
   fi
 
   mv "$tmp" "$_PLUGIN_CACHE"

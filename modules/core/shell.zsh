@@ -7,14 +7,14 @@ setopt AUTO_CD EXTENDED_GLOB
 
 # ==============================================================================
 # History Options
-# INC_APPEND_HISTORY:   write each command immediately
 # SHARE_HISTORY:        share history across all sessions in real-time
+#                       (implies immediate write + cross-session import)
 # HIST_IGNORE_ALL_DUPS: remove older duplicate when new one is added
 # HIST_SAVE_NO_DUPS:    omit duplicates when writing HISTFILE on shell exit
 # HIST_EXPIRE_DUPS_FIRST: expire oldest duplicates first when HISTSIZE limit hit
 # HIST_REDUCE_BLANKS:   strip superfluous whitespace from commands before saving
 # ==============================================================================
-setopt INC_APPEND_HISTORY SHARE_HISTORY
+setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS
 setopt HIST_EXPIRE_DUPS_FIRST HIST_REDUCE_BLANKS
 
