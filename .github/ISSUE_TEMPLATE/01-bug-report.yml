@@ -1,0 +1,103 @@
+name: Bug report
+description: Report reproducible incorrect behavior in the Zsh profile.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: checkboxes
+    id: duplicate_search
+    attributes:
+      label: Duplicate search
+      description: Check existing issues before submitting a new report.
+      options:
+        - label: I searched the existing issues and found no duplicate.
+          required: true
+
+  - type: dropdown
+    id: affected_area
+    attributes:
+      label: Affected area
+      description: Select the part of the project where the problem occurs.
+      options:
+        - Shell startup and core behavior
+        - Installer or uninstaller
+        - Portability and platform support
+        - Plugins and integrations
+        - Aliases and functions
+        - Security safeguards
+        - Tests, CI, and quality
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: profile_version
+    attributes:
+      label: Profile version or commit
+      description: Provide the release, tag, or commit that you are using.
+      placeholder: "v3.2 or commit SHA"
+    validations:
+      required: true
+
+  - type: input
+    id: operating_system
+    attributes:
+      label: Operating system
+      description: Include the distribution or platform and its version.
+      placeholder: "Fedora 44, Ubuntu 26.04, or macOS 27"
+    validations:
+      required: true
+
+  - type: input
+    id: zsh_version
+    attributes:
+      label: Zsh version
+      description: Run `zsh --version` and paste the result.
+      placeholder: "zsh 5.9"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current behavior
+      description: Describe what currently happens, including relevant error messages.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: Describe the result you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence that reproduces the problem.
+      placeholder: |
+        1. Start with...
+        2. Run...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs_and_config
+    attributes:
+      label: Relevant logs or configuration
+      description: Add sanitized output or configuration when it helps reproduce the problem.
+      render: shell
+
+  - type: checkboxes
+    id: secret_sanitization
+    attributes:
+      label: Secret sanitization
+      description: Review all submitted text, logs, and configuration before filing.
+      options:
+        - label: I removed tokens, passwords, private keys, and other secrets.
+          required: true

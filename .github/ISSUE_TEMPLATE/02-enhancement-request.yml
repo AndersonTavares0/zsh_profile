@@ -1,0 +1,84 @@
+name: Enhancement request
+description: Propose a focused improvement to the Zsh profile.
+title: "[Enhancement]: "
+labels:
+  - enhancement
+body:
+  - type: checkboxes
+    id: duplicate_search
+    attributes:
+      label: Duplicate search
+      description: Check existing issues before submitting a new request.
+      options:
+        - label: I searched the existing issues and found no duplicate.
+          required: true
+
+  - type: dropdown
+    id: affected_area
+    attributes:
+      label: Affected area
+      description: Select the part of the project this request concerns.
+      options:
+        - Shell startup and core behavior
+        - Installer or uninstaller
+        - Portability and platform support
+        - Plugins and integrations
+        - Aliases and functions
+        - Security safeguards
+        - Tests, CI, and quality
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem statement
+      description: Describe the user problem or limitation this change should address.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_outcome
+    attributes:
+      label: Proposed outcome
+      description: Describe the observable result you want, without prescribing unnecessary implementation details.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives_considered
+    attributes:
+      label: Alternatives considered
+      description: List the alternatives or workarounds you evaluated and their tradeoffs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: List specific, testable outcomes that would make this request complete.
+      placeholder: |
+        - [ ] When ..., then ...
+        - [ ] When ..., then ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: portability_impact
+    attributes:
+      label: Portability impact
+      description: Explain the effect on Linux distributions, macOS, dependencies, and shell environments.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: secret_sanitization
+    attributes:
+      label: Secret sanitization
+      description: Review all submitted examples and configuration before filing.
+      options:
+        - label: I removed tokens, passwords, private keys, and other secrets.
+          required: true
