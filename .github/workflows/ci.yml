@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zsh shellcheck
+
+      - name: Smoke tests
+        run: |
+          ZSH_PROFILE_TEST_DEPS="${GITHUB_WORKSPACE}/test-deps"
+          export ZSH_PROFILE_TEST_DEPS
+          ./tests/run.sh
+
+      - name: ShellCheck
+        run: |
+          shellcheck install.sh
+          shellcheck tests/bootstrap.sh
+          shellcheck tests/run.sh
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install shellcheck
+        run: brew install shellcheck
+
+      - name: Syntax checks
+        run: |
+          find . -type f \( -name '*.zsh' -o -name '.zshrc' \) -print0 | xargs -0 zsh -n
+          find . -type f -name '*.sh' -print0 | xargs -0 bash -n
+
+      - name: Smoke tests
+        run: |
+          ZSH_PROFILE_TEST_DEPS="${GITHUB_WORKSPACE}/test-deps"
+          export ZSH_PROFILE_TEST_DEPS
+          ./tests/run.sh
+
+      - name: ShellCheck
+        run: |
+          shellcheck install.sh
+          shellcheck tests/bootstrap.sh
+          shellcheck tests/run.sh
