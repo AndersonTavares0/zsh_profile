@@ -1,0 +1,39 @@
+#!/usr/bin/env zunit
+
+@setup {
+  ZUNIT_HOME=$(mktemp -d)
+  HOME="$ZUNIT_HOME"
+  XDG_CACHE_HOME="$ZUNIT_HOME/.cache"
+  mkdir -p "$XDG_CACHE_HOME"
+}
+
+@teardown {
+  rm -rf "$ZUNIT_HOME"
+}
+
+@test 'cache sourcing succeeds and creates cache file' {
+  source "$ZSH_PROFILE_ROOT/modules/plugins/cache.zsh"
+
+  expected="$XDG_CACHE_HOME/zsh_plugins_init.zsh"
+
+  run test -f "$expected"
+
+  assert $state equals 0
+}
+
+@test 'cache file contains fingerprint header line' {
+  source "$ZSH_PROFILE_ROOT/modules/plugins/cache.zsh"
+
+  cache_file="$XDG_CACHE_HOME/zsh_plugins_init.zsh"
+
+  run head -1 "$cache_file"
+
+  assert $state equals 0
+  assert $output matches '# zsh_plugin_cache fingerprint: '
+}
+
+@test 'module cache.zsh sources without errors' {
+  run source "$ZSH_PROFILE_ROOT/modules/plugins/cache.zsh"
+
+  assert $state equals 0
+}
