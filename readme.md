@@ -6,7 +6,7 @@
 [![Powerlevel10k](https://img.shields.io/badge/powerlevel10k-v1.20.0-blue?logo=github)](https://github.com/romkatv/powerlevel10k)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Opinionated Zsh configuration with Fedora as the primary target and full Linux/macOS compatibility. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, NVIDIA helpers, and in-shell security safeguards. Modular architecture — 15 self-documenting source files, tested on Linux and macOS via CI.
+Fedora-first Zsh configuration — modular, secure, and productive. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, NVIDIA helpers, and in-shell security safeguards. 15 self-documenting source files, tested on Linux and macOS via CI.
 
 ---
 
