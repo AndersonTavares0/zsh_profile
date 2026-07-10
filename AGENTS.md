@@ -27,7 +27,7 @@
 9. .zshrc auto-compilation to .zshrc.zwc runs in background
 
 ## Plugin Cache System
-- Watches: zoxide, eza, fzf
+- Watches: zoxide, fzf
 - Rebuilds when any watched tool version changes or cache missing
 - Fingerprint based on tool versions: `tool --version 2>/dev/null | head -1` → `cksum` hash
 - Cache location: $XDG_CACHE_HOME/zsh_plugins_init.zsh
@@ -65,7 +65,7 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Zsh Profile — Fedora Optimized**
+**Zsh Profile — Fedora-first**
 
 Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. Focus on fast shell startup (<150ms), intelligent plugin caching (zoxide, eza, fzf), productivity aliases/functions, and security safeguards for history and sudo commands. Forkable and installable — not distro-locked, but Fedora-first.
 

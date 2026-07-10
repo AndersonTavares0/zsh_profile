@@ -1,6 +1,6 @@
 # ==============================================================================
-# Zsh Configuration — Fedora-first, Linux/macOS compatible
-# Version: 3.1 | Modular | Oh My Zsh + Powerlevel10k
+# Zsh Configuration — Fedora-first
+# Version: 3.2 | Modular | Oh My Zsh + Powerlevel10k
 #
 # Sources modular configs in strict dependency order from subdirectories:
 #   boot/    — startup chain (prompt, timer, theme, compile)

@@ -1,4 +1,4 @@
-# TECHNICAL.md — Zsh Profile v3.1
+# TECHNICAL.md — Zsh Profile v3.2
 
 Architecture, module reference, design decisions, and extension guide for the Fedora-optimized Zsh configuration.
 
@@ -77,11 +77,8 @@ Configures Zsh options and history:
 
 - `AUTO_CD`: cd by typing directory name alone
 - `EXTENDED_GLOB`: `#`, `~`, `^` operators for pattern matching
-- History options: `SHARE_HISTORY` (share across sessions in real-time, implies immediate write), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
+- History options: `INC_APPEND_HISTORY` (write immediately), `SHARE_HISTORY` (share across sessions in real-time), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
 - `HISTSIZE=50000`, `SAVEHIST=50000`, `HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"`
-
-**Note:** `SHARE_HISTORY` is the single history-sharing mechanism. `INC_APPEND_HISTORY` was removed — it is redundant with `SHARE_HISTORY` and can cause write overlap issues in zsh 5.9.
-
 ### core/security.zsh (⑤)
 
 Two independent security layers:
@@ -321,11 +318,9 @@ Some configurations use `flock` (file lock) to prevent multiple simultaneous she
 - Race condition handling code
 - Lock file cleanup on crash
 
-### `SHARE_HISTORY` as Single History-Sharing Mechanism
+### `INC_APPEND_HISTORY` + `SHARE_HISTORY`
 
-`SHARE_HISTORY` shares history across all sessions in real-time, including immediate writes to HISTFILE. `INC_APPEND_HISTORY` was removed — it is a subset of SHARE_HISTORY's behavior and can cause write overlap issues in zsh 5.9.
-
-**Result:** History visible across all sessions immediately, single mechanism to maintain.
+Both options are enabled together. `INC_APPEND_HISTORY` writes each command to HISTFILE immediately. `SHARE_HISTORY` syncs history across all sessions in real-time via IPC notification. Together they provide immediate persistence and cross-session visibility — commands from one session appear in others without delay.
 
 ### `-p` Removed from History Filter
 

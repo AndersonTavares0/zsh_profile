@@ -1,4 +1,4 @@
-# zsh_profile — Fedora-first, Linux/macOS compatible Zsh Config
+# zsh_profile — Fedora-first Zsh Config
 
 [![CI](https://github.com/AndersonTavares0/zsh_profile/actions/workflows/ci.yml/badge.svg)](https://github.com/AndersonTavares0/zsh_profile/actions/workflows/ci.yml)
 [![Zsh 5.9](https://img.shields.io/badge/zsh-5.9-f15a24?logo=zsh&logoColor=white)](https://zsh.sourceforge.io/)
@@ -20,7 +20,7 @@ An interactive menu appears — even through a piped curl session. Choose:
 
 ```
 ╔══════════════════════════════════════════╗
-║        Zsh Profile — Fedora v3.1        ║
+║        Zsh Profile — Fedora v3.2        ║
 ╠══════════════════════════════════════════╣
 ║                                          ║
 ║  [1] Install                             ║
