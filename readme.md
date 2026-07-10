@@ -1,14 +1,12 @@
-# zsh_profile — Fedora-Optimized Zsh Config
+# zsh_profile — Fedora-first, Linux/macOS compatible Zsh Config
 
+[![CI](https://github.com/AndersonTavares0/zsh_profile/actions/workflows/ci.yml/badge.svg)](https://github.com/AndersonTavares0/zsh_profile/actions/workflows/ci.yml)
 [![Zsh 5.9](https://img.shields.io/badge/zsh-5.9-f15a24?logo=zsh&logoColor=white)](https://zsh.sourceforge.io/)
-[![Fedora](https://img.shields.io/badge/fedora-44-294172?logo=fedora&logoColor=white)](https://fedoraproject.org/)
 [![Oh My Zsh](https://img.shields.io/badge/oh--my--zsh-latest-black?logo=github)](https://ohmyz.sh/)
 [![Powerlevel10k](https://img.shields.io/badge/powerlevel10k-v1.20.0-blue?logo=github)](https://github.com/romkatv/powerlevel10k)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![ShellCheck](https://img.shields.io/badge/lint-zsh--n-brightgreen)](#)
-[![Lines](https://img.shields.io/badge/lines-800%2B-informational)](#)
 
-Opinionated Zsh configuration tuned for Fedora Linux. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, Fedora/NVIDIA helpers, and in-shell security safeguards. Modular architecture — 15 self-documenting source files.
+Opinionated Zsh configuration with Fedora as the primary target and full Linux/macOS compatibility. Fast startup (&lt;150ms), intelligent plugin caching, productive aliases and functions, NVIDIA helpers, and in-shell security safeguards. Modular architecture — 15 self-documenting source files, tested on Linux and macOS via CI.
 
 ---
 
@@ -71,13 +69,13 @@ same script supports Linux and macOS with the system Bash 3.2 or newer.
 - **History Filter** (`zshaddhistory` hook) — silently blocks credential patterns from history:
   env vars (TOKEN, SECRET, API_KEY, ...), URL-embedded tokens (`https://user:pass@host`),
   flag-based credentials (`--token`, `--password`), SSH key material, and GPG passphrase commands. Also blocks commands &gt;4096 chars.
-- **Sudo Wrapper** — `sudo !!` re-executes the last command as root with a safety blocklist: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`, and recursive `sudo` are refused.
+- **Sudo Guard** (`sudo-last` function) — previews the last history command, asks for confirmation, and blocks dangerous patterns: `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. Use `--yes` to skip the prompt in scripts.
 
 ### Productivity
 - **15 modular source files** — one concern per file, loaded in strict dependency order with inline documentation explaining every flag and pattern.
 - **eza aliases** — `ls`, `ll`, `la`, `l`, `lt` with icons, git status, and tree view (gracefully skipped when eza is absent).
 - **8 utility functions** — directory navigation (`mkcd`, `up [n]`), git workflow (`gcom`, `lazyg` with 10s push timeout), safe sed with backup (`sedi`), multi-format archive extractor (`extract`), timestamped backups (`bk`), and port scanner (`port`).
-- **System cleanup** — `dnf-clean`, `flatpak-clean`, `sys-clean` for Fedora package maintenance, defined only when the matching tools are installed.
+- **System cleanup** — `dnf-clean`, `apt-clean`, `brew-clean`, `flatpak-clean`, `sys-clean` — platform-adaptive, defined only when the corresponding tool is installed.
 - **Fedora + NVIDIA helpers** — on-demand GPU status, RPMFusion diagnostics, Akmods rebuild helper, and manual CUDA environment activation.
 - **XDG compliance** — `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` exported so modern CLI tools auto-respect them.
 
@@ -154,7 +152,8 @@ git clone https://github.com/romkatv/zsh-defer $ZSH_CUSTOM/plugins/zsh-defer
 | Command | Description |
 |---------|-------------|
 | `zshrc-time` | Display boot time with color-coded rating |
-| `port [num]` | List listening ports or check if a port is in use |
+| `sudo-last` | Execute last history command with sudo (confirmation + safety blocklist) |
+| `port [num]` | List listening ports or check if a port is in use (cross-platform) |
 
 ### Navigation
 
@@ -180,13 +179,15 @@ git clone https://github.com/romkatv/zsh-defer $ZSH_CUSTOM/plugins/zsh-defer
 | `gcom "msg"` | Stage all + commit (fails on clean working tree) |
 | `lazyg "msg"` | `gcom` + interactive push prompt (10s timeout) |
 
-### System (Fedora)
+### System
 
 | Command | Description |
 |---------|-------------|
-| `dnf-clean` | Autoremove orphans + clean DNF cache |
+| `dnf-clean` | Autoremove orphans + clean DNF cache (Fedora) |
+| `apt-clean` | Autoremove + autoclean (Debian/Ubuntu) |
+| `brew-clean` | Cleanup Homebrew (macOS) |
 | `flatpak-clean` | Remove unused Flatpak runtimes |
-| `sys-clean` | Both cleanup operations |
+| `sys-clean` | Run cleanup for detected package manager (dnf > apt > brew) |
 | `reload` | Re-source `~/.zshrc` |
 
 ### Fedora + NVIDIA
@@ -246,10 +247,10 @@ Each module file is self-documenting: comments explain what every flag, option, 
 | Platform | Status |
 |----------|--------|
 | **Fedora Linux** | Primary target — all features tested |
+| **macOS** | Supported — CI-tested, Homebrew PATH auto-detected |
 | RHEL / CentOS Stream | Works (DNF-based, same packages) |
 | Debian / Ubuntu | Works with `apt` (installer auto-detects) |
 | Arch Linux | Works with `pacman` (installer auto-detects) |
-| macOS | Partial — no DNF aliases, eza via Homebrew |
 
 ---
 
