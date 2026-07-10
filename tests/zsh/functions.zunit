@@ -165,3 +165,18 @@
   assert $state equals 0
   assert "$output" is_not_empty
 }
+
+@test 'lazyg returns 0 when commit succeeds but push is skipped (non-interactive)' {
+  repodir="$ZUNIT_HOME/lazyg-test"
+  mkdir -p "$repodir"
+  git -C "$repodir" init -q
+  git -C "$repodir" config user.email "test@test"
+  git -C "$repodir" config user.name "Test"
+  git -C "$repodir" commit --allow-empty -q -m "initial"
+
+  printf 'change\n' > "$repodir/file.txt"
+
+  run zsh -c "HOME='$ZUNIT_HOME' cd '$repodir' && source '$ZSH_PROFILE_ROOT/modules/tools/functions.zsh' && lazyg 'test lazyg commit' </dev/null"
+
+  assert $state equals 0
+}
