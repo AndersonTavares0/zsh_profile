@@ -28,7 +28,9 @@ ensure_repo() {
   fi
   if [[ -d "$REPO_CLONE_DIR/.git" ]]; then
     printf "${CYAN}Updating existing clone...${NC}\n"
-    git -C "$REPO_CLONE_DIR" pull --ff-only 2>/dev/null || true
+    if ! git -C "$REPO_CLONE_DIR" pull --ff-only 2>/dev/null; then
+      printf "${YELLOW}Warning: could not update repo clone — using existing copy${NC}\n"
+    fi
     REPO_DIR="$REPO_CLONE_DIR"
     return 0
   fi
@@ -118,8 +120,11 @@ do_link_config() {
   for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
     if [[ -e "$f" && ! -L "$f" ]]; then
       local bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
-      cp -r "$f" "$bak" 2>/dev/null || true
-      printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+      if cp -r "$f" "$bak" 2>/dev/null; then
+        printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+      else
+        printf "  ${RED}Warning: could not backup $f${NC}\n"
+      fi
     fi
   done
 
