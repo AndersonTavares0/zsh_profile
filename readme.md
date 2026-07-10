@@ -109,6 +109,8 @@ same script supports Linux and macOS with the system Bash 3.2 or newer.
 
 Numbers indicate load order — P10k Instant Prompt must be first, P10k theme must be last. Everything between follows the dependency chain.
 
+For a deep dive into each module, design decisions, and extension guide, see [`docs/TECHNICAL.md`](docs/TECHNICAL.md).
+
 ---
 
 ## Requirements
