@@ -45,3 +45,19 @@ teardown() {
   run test -L "$HOME/.zsh_modules"
   [ "$status" -ne 0 ]
 }
+
+@test 'uninstall removes install state file if present' {
+  state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/zsh_profile"
+  mkdir -p "$state_dir"
+  printf 'installed_at=2024-01-01\n' > "$state_dir/install.state"
+
+  ln -s "$ZSH_PROFILE_ROOT/.zshrc" "$HOME/.zshrc"
+
+  run bash "$ZSH_PROFILE_ROOT/install.sh" --uninstall
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Uninstall complete"* ]]
+
+  run test -f "$state_dir/install.state"
+  [ "$status" -ne 0 ]
+}

@@ -12,6 +12,8 @@ set -euo pipefail
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/zsh_profile"
+STATE_FILE="$STATE_DIR/install.state"
 
 # Resolve repo directory: when piped via curl, clone to ~/.zsh_profile_repo
 REPO_DIR=""
@@ -47,6 +49,22 @@ detect_pkg_manager() {
   elif command -v pacman &>/dev/null; then echo "pacman"
   elif command -v zypper &>/dev/null; then echo "zypper"
   else echo "unknown"; fi
+}
+
+write_install_state() {
+  mkdir -p "$STATE_DIR"
+  printf 'installed_at=%s\n' "$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')" > "$STATE_FILE"
+  printf 'repo_dir=%s\n' "$REPO_DIR" >> "$STATE_FILE"
+  if [[ -d "$REPO_DIR/.git" ]]; then
+    printf 'commit=%s\n' "$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" >> "$STATE_FILE"
+  fi
+}
+
+remove_install_state() {
+  if [[ -f "$STATE_FILE" ]]; then
+    rm -f "$STATE_FILE"
+    rmdir "$STATE_DIR" 2>/dev/null || true
+  fi
 }
 
 read_choice() {
@@ -151,6 +169,7 @@ do_quick_install() {
   do_install_plugins
   do_link_config
   do_set_shell
+  write_install_state
 }
 
 # ─── Uninstall ───────────────────────────────────────────────────────────────
@@ -196,6 +215,7 @@ do_uninstall() {
   else
     printf "\n${GREEN}Uninstall complete (${removed} items cleaned).${NC}\n"
     printf "Packages (zsh, git, eza, fzf, zoxide) and OMZ/P10k are preserved.\n"
+    remove_install_state
   fi
 }
 
