@@ -159,7 +159,8 @@ do_link_config() {
   # Backup existing files before symlinking (never overwrite without copy)
   for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
     if [[ -e "$f" && ! -L "$f" ]]; then
-      local bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
+      local bak
+      bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
       if cp -r "$f" "$bak" 2>/dev/null; then
         printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
       else
