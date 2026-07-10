@@ -77,10 +77,10 @@ Configures Zsh options and history:
 
 - `AUTO_CD`: cd by typing directory name alone
 - `EXTENDED_GLOB`: `#`, `~`, `^` operators for pattern matching
-- History options: `INC_APPEND_HISTORY` (write immediately, shared across sessions), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
+- History options: `SHARE_HISTORY` (share across sessions in real-time, implies immediate write), `HIST_IGNORE_ALL_DUPS`, `HIST_SAVE_NO_DUPS`, `HIST_EXPIRE_DUPS_FIRST`, `HIST_REDUCE_BLANKS`
 - `HISTSIZE=50000`, `SAVEHIST=50000`, `HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"`
 
-**Note:** `SHARE_HISTORY` is intentionally omitted. It forces cross-session sync on every command via IPC notification, adding ~2ms per prompt. `INC_APPEND_HISTORY` writes to HISTFILE immediately — other sessions see new commands on their next prompt (same UX, less overhead).
+**Note:** `SHARE_HISTORY` is the single history-sharing mechanism. `INC_APPEND_HISTORY` was removed — it is redundant with `SHARE_HISTORY` and can cause write overlap issues in zsh 5.9.
 
 ### core/security.zsh (⑤)
 
@@ -102,17 +102,16 @@ The function converts input to uppercase for case-insensitive matching. Returns 
 
 **`-p` was removed** from the flag-based patterns because it produced too many false positives: `ssh -p 2222 host`, `ping -p 80 host`, `tar -p file.tar.gz` are all legitimate commands that triggered the filter.
 
-**Sudo Wrapper** (`sudo()` function): Overrides the `sudo` command. When invoked as `sudo !!`, retrieves the last command via `fc -ln -1` and checks against a blocklist:
+**Sudo Guard** (`sudo-last` function): Explicit command (doesn't shadow the `sudo` binary). Previews the last history command via `fc -ln -1`, asks for confirmation, and checks against a blocklist:
 
 | Pattern | Blocks |
 |---------|--------|
-| `sudo ...` | Recursive sudo calls |
 | `rm -rf /` | Root filesystem wipe |
 | `mkfs` | Device formatting |
 | `dd of=` | Direct disk writes |
 | `chmod -R 777 /` | World-writable root |
 
-Blocked commands return exit code 1 with an error message. Non-`!!` sudo invocations pass through to `command sudo` directly.
+Blocked commands return exit code 1 with an error message. Use `--yes` to skip the confirmation prompt in non-interactive scripts.
 
 ### plugins/cache.zsh (⑥)
 
@@ -122,7 +121,7 @@ Blocked commands return exit code 1 with an error message. Non-`!!` sudo invocat
 
 1. **Generate fingerprint**: `tool --version | head -1` for each watched tool → concatenate → `cksum` (CRC32 + byte count)
 2. **Check staleness**: Compares cache file's modification time against a `.last_check` marker. Only re-checks fingerprint once per 24 hours (TTL). This avoids running `tool --version` on every shell start.
-3. **Rebuild**: If fingerprint mismatch, rebuild cache via `mktemp` (secure temp) → write → `mv` (atomic overwrite). Trap cleans up temp on interruption.
+3. **Rebuild**: If fingerprint mismatch, rebuild cache via `mktemp` → validate tool output → `mv` (atomic overwrite). Each tool's init is validated by exit code before inclusion; failed tools leave a comment marker. Trap cleans up temp on interruption.
 4. **Source**: Cache file is sourced directly (fast path).
 5. **Bytecode compile**: Cache is compiled to `.zwc` in background (`zcompile ... &!`) for faster loading on next shell start.
 
@@ -133,7 +132,7 @@ Watched tools: `zoxide`, `fzf`.
 Configures Oh My Zsh with performance-focused flags:
 
 - `ZSH_DISABLE_COMPFIX=true`: skips compaudit (~7ms saved). Safe on single-user machines.
-- `DISABLE_AUTO_UPDATE=true`: skips OMZ auto-update check on shell start.
+- `zstyle ':omz:update' mode disabled`: disables OMZ auto-update prompt via the recommended zstyle method.
 - `ZSH_THEME=""`: Powerlevel10k is loaded separately via `boot/theme.zsh`.
 
 Core plugins: `git` (aliases, branch info), `history` (history-related aliases).
@@ -159,7 +158,7 @@ Conditionally defines aliases (guarded by `command -v`). Groups:
 | File listing (eza) | `ls`, `ll`, `la`, `l`, `lt` | `eza` |
 | Colorized grep | `grep --color=auto`, `fgrep`, `egrep` | `grep` |
 | Navigation | `home`, `docs`, `dtop`, `reload` | none (static) |
-| System cleanup | `dnf-clean`, `flatpak-clean`, `sys-clean` | `dnf`, `flatpak` |
+| System cleanup | `dnf-clean`, `apt-clean`, `brew-clean`, `flatpak-clean`, `sys-clean` (platform-adaptive) | `dnf`, `apt`, `brew`, `flatpak` |
 
 The `sys-clean` alias has 3 variants: both DNF+Flatpak available, DNF only, Flatpak only.
 
@@ -236,7 +235,7 @@ CUDA is deliberately not added to PATH automatically — avoids global LD_LIBRAR
 | `sedi "s/a/b/" <file>` | Safe in-place sed | `cp` backup → `mktemp` → `sed` → `mv` (atomic) |
 | `extract <archive>` | Extract any format | Case/esac on extension: tar.gz, zip, rar, 7z, zst |
 | `bk <file>` | Timestamped backup | `file.bak.YYYYMMDD_HHMMSS` |
-| `port [num]` | Port checker | `ss -tulpn` ± `grep -w` (prevents "80" matching "8080") |
+| `port [num]` | Port checker | Linux: `ss -tulpn`, macOS: `lsof -i`, validates 1-65535 |
 
 ### tools/local.zsh (⑫)
 
@@ -322,11 +321,11 @@ Some configurations use `flock` (file lock) to prevent multiple simultaneous she
 - Race condition handling code
 - Lock file cleanup on crash
 
-### `INC_APPEND_HISTORY` over `SHARE_HISTORY`
+### `SHARE_HISTORY` as Single History-Sharing Mechanism
 
-`SHARE_HISTORY` forces cross-session sync on every command via IPC notification (`print -s` → `zsh -c 'fc -R ...'`), adding ~2ms per prompt. `INC_APPEND_HISTORY` writes to HISTFILE immediately; other sessions read from disk on their next prompt.
+`SHARE_HISTORY` shares history across all sessions in real-time, including immediate writes to HISTFILE. `INC_APPEND_HISTORY` was removed — it is a subset of SHARE_HISTORY's behavior and can cause write overlap issues in zsh 5.9.
 
-**Result:** Same effective UX (history visible across sessions), ~2ms less overhead per prompt.
+**Result:** History visible across all sessions immediately, single mechanism to maintain.
 
 ### `-p` Removed from History Filter
 
@@ -334,13 +333,9 @@ Some configurations use `flock` (file lock) to prevent multiple simultaneous she
 
 **Decision:** Remove `-p` entirely. The remaining patterns (`--token`, `--password`, `--secret`, `--api-key`, `--access-key`) cover flag-based credential leaks. `-p` is too ambiguous across tools.
 
-### Sudo Wrapper in-shell over `sudoers.d` Rules
+### sudo-last over sudo() Wrapper
 
-**Alternatives considered:**
-- `/etc/sudoers.d/blacklist` — requires root to install, hard to maintain, doesn't cover `sudo !!`
-- External script — requires a wrapper binary in PATH
-
-**Decision:** Pure Zsh function wrapping `sudo`. No external dependencies, works with `sudo !!` via `fc -ln -1`, trivially auditable.
+The original `sudo()` function hijacked the `sudo` binary, intercepting calls to `sudo !!`. This was confusing — users expected normal `sudo` behavior. The `sudo-last` function is an explicit, separate command: previews the last history entry, confirms with the user, and blocks dangerous patterns. `--yes` flag skips the prompt for script use.
 
 ### CUDA Opt-in over Global `LD_LIBRARY_PATH`
 
@@ -418,13 +413,15 @@ trap - INT TERM
 | `gcom "msg"` | Stage all + commit (fails on clean working tree) |
 | `lazyg "msg"` | `gcom` + interactive push prompt (10s timeout) |
 
-### System (Fedora)
+### System (platform-adaptive)
 
 | Command | Description |
 |---------|-------------|
-| `dnf-clean` | Autoremove orphans + clean DNF cache |
+| `dnf-clean` | Autoremove orphans + clean DNF cache (Fedora) |
+| `apt-clean` | Autoremove + autoclean (Debian/Ubuntu) |
+| `brew-clean` | Cleanup Homebrew (macOS) |
 | `flatpak-clean` | Remove unused Flatpak runtimes |
-| `sys-clean` | Both cleanup operations |
+| `sys-clean` | First available: dnf > apt > brew |
 | `reload` | Re-source `~/.zshrc` |
 
 ### File Listing
