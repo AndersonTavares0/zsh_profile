@@ -1,0 +1,81 @@
+#!/usr/bin/env zunit
+
+@setup {
+  ZUNIT_HOME=$(mktemp -d)
+  HOME="$ZUNIT_HOME"
+
+  source "$ZSH_PROFILE_ROOT/modules/tools/functions.zsh" 2>/dev/null
+}
+
+@teardown {
+  rm -rf "$ZUNIT_HOME"
+}
+
+@test 'function up is defined' {
+  run typeset -f up
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function mkcd is defined' {
+  run typeset -f mkcd
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function nf is defined' {
+  run typeset -f nf
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function gcom is defined' {
+  run typeset -f gcom
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function lazyg is defined' {
+  run typeset -f lazyg
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function sedi is defined' {
+  run typeset -f sedi
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function extract is defined' {
+  run typeset -f extract
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function bk is defined' {
+  run typeset -f bk
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'function port is defined' {
+  run typeset -f port
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'module functions.zsh sources without errors' {
+  run source "$ZSH_PROFILE_ROOT/modules/tools/functions.zsh" 2>/dev/null
+
+  assert $state equals 0
+}

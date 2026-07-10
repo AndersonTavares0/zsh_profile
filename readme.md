@@ -44,6 +44,19 @@ Choose [1-3/q]:
 ./install.sh --uninstall   # Uninstall without menu
 ```
 
+## Tests
+
+Run every local gate with one command:
+
+```bash
+./tests/run.sh
+```
+
+The harness checks Zsh and Bash syntax, then runs ZUnit and Bats. It installs
+pinned test dependencies under `${XDG_CACHE_HOME:-$HOME/.cache}`; set
+`ZSH_PROFILE_TEST_DEPS` to use another directory outside the repository. The
+same script supports Linux and macOS with the system Bash 3.2 or newer.
+
 ---
 
 ## Features
