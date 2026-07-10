@@ -154,13 +154,45 @@ bk() {
 }
 
 # port [number]: check which process is using a port (or list all)
-# ss -tulpn: t=tcp, u=udp, l=listening, p=process, n=numeric (no DNS lookup)
-# grep -w: word-boundary match — "80" won't match "8080"
-# Without arguments: shows full ss -tulpn output
+# Validates port number as 1-65535; rejects non-numeric input
+# Linux: uses ss -tulpn (iproute2), fallback to netstat
+# macOS: uses lsof -i (ss not available)
 port() {
   if [[ -n "$1" ]]; then
-    ss -tulpn | grep -w ":$1" || printf 'Port %s is free\n' "$1"
+    if [[ ! "$1" =~ ^[0-9]+$ ]] || (( $1 < 1 || $1 > 65535 )); then
+      printf 'port: valid port number required (1-65535), got: %s\n' "$1" >&2
+      return 1
+    fi
+
+    case "$(uname -s)" in
+      Darwin)
+        lsof -i ":$1" || printf 'Port %s is free\n' "$1" ;;
+      Linux)
+        if command -v ss &>/dev/null; then
+          ss -tulpn | grep -w ":$1" || printf 'Port %s is free\n' "$1"
+        elif command -v netstat &>/dev/null; then
+          netstat -tulpn 2>/dev/null | grep -w ":$1" || printf 'Port %s is free\n' "$1"
+        else
+          printf 'port: no inspection tool available (install iproute2 or net-tools)\n' >&2
+          return 1
+        fi ;;
+      *)
+        printf 'port: unsupported platform\n' >&2
+        return 1 ;;
+    esac
   else
-    ss -tulpn
+    case "$(uname -s)" in
+      Darwin) lsof -i -P -n ;;
+      Linux)
+        if command -v ss &>/dev/null; then
+          ss -tulpn
+        elif command -v netstat &>/dev/null; then
+          netstat -tulpn 2>/dev/null
+        else
+          printf 'port: no inspection tool available\n' >&2
+          return 1
+        fi ;;
+      *) printf 'port: unsupported platform\n' >&2; return 1 ;;
+    esac
   fi
 }
