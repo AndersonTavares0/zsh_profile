@@ -1,6 +1,6 @@
 # TECHNICAL.md — Zsh Profile v3.2
 
-Architecture, module reference, design decisions, and extension guide for the Fedora-optimized Zsh configuration.
+Architecture, module reference, design decisions, and extension guide for the Fedora-first Zsh configuration.
 
 ---
 
