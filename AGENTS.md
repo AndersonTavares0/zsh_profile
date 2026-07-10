@@ -13,7 +13,7 @@
 - `port [num]` - Check port usage (ss -tulpn)
 - `dnf-clean` - Remove orphaned deps and clean DNF cache
 - `flatpak-clean` - Remove unused Flatpak runtimes
-- `sys-clean` - Run both DNF and Flatpak cleanup
+- `sys-clean` - Run first available of dnf/apt/brew
 
 ## Critical Execution Order
 1. Powerlevel10k instant prompt MUST be first in .zshrc
@@ -27,7 +27,7 @@
 9. .zshrc auto-compilation to .zshrc.zwc runs in background
 
 ## Plugin Cache System
-- Watches: zoxide, eza, fzf
+- Watches: zoxide, fzf
 - Rebuilds when any watched tool version changes or cache missing
 - Fingerprint based on tool versions: `tool --version 2>/dev/null | head -1` → `cksum` hash
 - Cache location: $XDG_CACHE_HOME/zsh_plugins_init.zsh
@@ -45,9 +45,9 @@
   - ≥500ms: Slow
 
 ## Security Features
-- History filtering: Blocks commands containing TOKEN, SECRET, PASSWORD etc.
-- Sudo protection: Blocks sudo rm -rf /, mkfs, dd of=, chmod -R 777 /, and recursive sudo
-- All sudo !! executions show warning and require confirmation for dangerous patterns
+- History filtering: Blocks commands containing TOKEN, SECRET, PASSWORD, API_KEY, PRIVATE_KEY, CREDENTIAL, flag-based credentials, URL-embedded tokens, SSH keys, GPG passphrase commands
+- Sudo protection: sudo-last function blocks rm -rf /, mkfs, dd of=, chmod -R 777 /
+- All sudo-last executions show command preview; dangerous patterns are blocked without confirmation; non-dangerous patterns require [y/N] confirmation
 
 ## Important Files
 - `.zshrc` - Main configuration
@@ -65,7 +65,7 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**Zsh Profile — Fedora Optimized**
+**Zsh Profile — Fedora-first**
 
 Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. Focus on fast shell startup (<150ms), intelligent plugin caching (zoxide, eza, fzf), productivity aliases/functions, and security safeguards for history and sudo commands. Forkable and installable — not distro-locked, but Fedora-first.
 
@@ -137,14 +137,16 @@ Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. F
 | ripgrep | rg | silver-searcher (ag), grep | ripgrep is the fastest. ag is unmaintained. Fedora has both. RIPGREP_CONFIG_PATH allows persistent config. |
 | fd-find | fd | find, plocate | fd respects `.gitignore` by default, which is critical for fzf file searches in git repos (`fzf --preview 'bat --color=always {}'` searches don't want to include `.git/` or `node_modules/`). |
 ## Architecture of Plugin Loading
-- Steps 11-12 are replaced with:
-- These run asynchronously while the user is already at the prompt
+- **cache.zsh** (⑥): Validates version fingerprint → sources cached init output
+- **omz.zsh** (⑦): Oh My Zsh framework + conditional plugins (git, history, zsh-autosuggestions, zsh-syntax-highlighting)
+- **lazy.zsh** (⑧): Optional zsh-defer for deferred plugin loading
+- Plugins load synchronously; cache avoids re-running `zoxide init` and fzf key-bindings on every shell start
 ## Security Considerations
 | Layer | What It Protects | Implementation |
 |-------|-----------------|----------------|
 | History filter | Credentials in commands | `zshaddhistory()` hook — case-insensitive regex match on TOKEN, SECRET, PASSWORD, API_KEY, etc. |
-| Sudo wrapper | Dangerous root commands | Zsh function wrapping `sudo`. Blocks recursive sudo, `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. |
-| History dedup | Sensitive command proliferation | `setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS` |
+| Sudo wrapper | Dangerous root commands | Zsh function wrapping `sudo`. Blocks recursive sudo, `rm -rf /`, `mkfs`, `dd of=`, `chmod -R 777 /`. Also blocks commands with `|` and `&&` chains. |
+| History dedup | Sensitive command proliferation | `setopt HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS HIST_EXPIRE_DUPS_FIRST HIST_REDUCE_BLANKS` |
 ## What NOT to Use and Why
 | Technology | Reason to Avoid |
 |------------|-----------------|
@@ -175,7 +177,7 @@ Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. F
 - GitHub releases API for all tools (verified via curl)
 - DNF repo queries for Fedora 44 package versions
 - Official README documents:
-- Existing `.zshrc` version 2.3 analysis
+- Existing `.zshrc` version 3.3 analysis
 - PROJECT.md constraints and decisions
 <!-- GSD:stack-end -->
 
