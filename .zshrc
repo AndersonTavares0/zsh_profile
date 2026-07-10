@@ -1,5 +1,5 @@
 # ==============================================================================
-# Zsh Configuration — Fedora Optimized
+# Zsh Configuration — Fedora-first, Linux/macOS compatible
 # Version: 3.1 | Modular | Oh My Zsh + Powerlevel10k
 #
 # Sources modular configs in strict dependency order from subdirectories:
