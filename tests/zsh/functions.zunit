@@ -79,3 +79,104 @@
 
   assert $state equals 0
 }
+
+@test 'up with no argument goes up one directory' {
+  start="$PWD"
+  mkdir -p "$ZUNIT_HOME/a/b/c"
+  cd "$ZUNIT_HOME/a/b/c"
+
+  up
+  assert "$PWD" same_as "$ZUNIT_HOME/a/b"
+  cd "$start"
+}
+
+@test 'up with positive integer goes up N levels' {
+  start="$PWD"
+  mkdir -p "$ZUNIT_HOME/x/y/z"
+  cd "$ZUNIT_HOME/x/y/z"
+
+  up 2
+
+  assert "$PWD" same_as "$ZUNIT_HOME/x"
+  cd "$start"
+}
+
+@test 'up with zero prints error and returns 1' {
+  run up 0
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
+@test 'up with negative number prints error and returns 1' {
+  run up -3
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
+@test 'up with non-numeric argument prints error and returns 1' {
+  run up abc
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
+@test 'sedi creates temp file in target directory, not /tmp' {
+  workdir="$ZUNIT_HOME/sedi-test"
+  mkdir -p "$workdir"
+  target="$workdir/target.txt"
+  printf 'hello\n' > "$target"
+  original_mode=$(stat -c '%a' "$target" 2>/dev/null || stat -f '%Lp' "$target" 2>/dev/null)
+
+  run sedi 's/hello/world/' "$target"
+
+  assert $state equals 0
+
+  # Verify content changed
+  run cat "$target"
+  assert $state equals 0
+  assert $output same_as 'world'
+
+  # Verify backup exists
+  run test -f "$workdir/target.txt.bak."*
+  assert $state equals 0
+
+  # Verify mode preserved
+  new_mode=$(stat -c '%a' "$target" 2>/dev/null || stat -f '%Lp' "$target" 2>/dev/null)
+  assert "$new_mode" same_as "$original_mode"
+}
+
+@test 'gcom stages changes from repo root via git add -A' {
+  repodir="$ZUNIT_HOME/gcom-test"
+  mkdir -p "$repodir/sub"
+  git -C "$repodir" init -q
+  git -C "$repodir" config user.email "test@test"
+  git -C "$repodir" config user.name "Test"
+
+  printf 'root-file\n' > "$repodir/root.txt"
+  printf 'sub-file\n' > "$repodir/sub/sub.txt"
+
+  cd "$repodir/sub"
+  gcom "test commit"
+  cd "$ZUNIT_HOME"
+
+  run git -C "$repodir" log --oneline
+  assert $state equals 0
+  assert "$output" is_not_empty
+}
+
+@test 'lazyg returns 0 when commit succeeds but push is skipped (non-interactive)' {
+  repodir="$ZUNIT_HOME/lazyg-test"
+  mkdir -p "$repodir"
+  git -C "$repodir" init -q
+  git -C "$repodir" config user.email "test@test"
+  git -C "$repodir" config user.name "Test"
+  git -C "$repodir" commit --allow-empty -q -m "initial"
+
+  printf 'change\n' > "$repodir/file.txt"
+
+  run zsh -c "HOME='$ZUNIT_HOME' cd '$repodir' && source '$ZSH_PROFILE_ROOT/modules/tools/functions.zsh' && lazyg 'test lazyg commit' </dev/null"
+
+  assert $state equals 0
+}

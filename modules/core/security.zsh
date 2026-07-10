@@ -41,36 +41,51 @@ zshaddhistory() {
 }
 
 # ==============================================================================
-# Sudo Wrapper — blocks dangerous root commands via pattern matching
+# sudo-last — execute the last history command with sudo after confirmation
 #
-# When invoked as `sudo !!`:
-#   1. Retrieves the last command via `fc -ln -1` (fc = fix command history)
-#   2. Checks against a blocklist of destructive patterns using regex
-#   3. If blocked: prints error and returns 1 (non-zero exit)
-#   4. If allowed: re-executes the last command via `command sudo zsh -c`
+# Usage: sudo-last [--yes]
+#   --yes: skip confirmation (useful in scripts, still checks blocklist)
+#
+# Flow:
+#   1. Retrieves the last command via `fc -ln -1`
+#   2. Checks against a blocklist of destructive patterns
+#   3. If blocked: prints error and returns 1
+#   4. Shows preview and asks for confirmation (unless --yes)
+#   5. On confirm: executes via `command sudo zsh -c "<last_cmd>"`
 #
 # Blocked patterns:
-#   - sudo:       recursive sudo calls (prevent escalation confusion)
 #   - rm -rf /:   wipe root filesystem
-#   - mkfs:       format a device (destroys all data)
-#   - dd of=:     direct disk writes (can corrupt partition tables)
+#   - mkfs:       format a device
+#   - dd of=:     direct disk writes
 #   - chmod -R 777 /: world-writable root directory
-#
-# For normal sudo usage (not `!!`): passes through directly to `command sudo`
 # ==============================================================================
-sudo() {
-  if [[ "$1" == "!!" ]]; then
-    local last_cmd=$(fc -ln -1 | sed 's/^[[:space:]]*//')
+sudo-last() {
+  local yes_mode=0
+  [[ "$1" == "--yes" ]] && { yes_mode=1; shift; }
 
-    # Blocklist: dangerous patterns that must never run as root
-    if [[ "$last_cmd" =~ ^(sudo|rm[[:space:]]+-rf[[:space:]]+/|mkfs|dd[[:space:]]+of=|chmod[[:space:]]+-R[[:space:]]+777[[:space:]]+/) ]]; then
-      printf 'Blocked by security: %s\n' "$last_cmd" >&2
-      return 1
-    fi
+  local last_cmd=$(fc -ln -1 | sed 's/^[[:space:]]*//')
 
-    printf 'Executing as root: %s\n' "$last_cmd"
+  [[ -z "$last_cmd" ]] && { printf 'No previous command in history.\n' >&2; return 1; }
+
+  if [[ "$last_cmd" =~ ^(rm[[:space:]]+-rf[[:space:]]+/|mkfs|dd[[:space:]]+of=|chmod[[:space:]]+-R[[:space:]]+777[[:space:]]+/) ]]; then
+    printf 'Blocked by security: %s\n' "$last_cmd" >&2
+    return 1
+  fi
+
+  printf 'Last command: %s\n' "$last_cmd"
+
+  if (( yes_mode )); then
+    command sudo zsh -c "$last_cmd"
+    return $?
+  fi
+
+  printf 'Confirm execution with sudo? [y/N] '
+  local confirm
+  read -r -t 10 confirm || { printf '\nTimeout — cancelled.\n' >&2; return 0; }
+
+  if [[ "$confirm" =~ ^[yY]$ ]]; then
     command sudo zsh -c "$last_cmd"
   else
-    command sudo "$@"
+    printf 'Cancelled.\n'
   fi
 }

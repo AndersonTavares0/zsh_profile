@@ -4,11 +4,18 @@
 
 # up [n]: go up n directory levels (default: 1)
 # up 3 = cd ../../..  (one call, no chaining needed)
+# Validates n as a positive integer (1+); rejects 0, negatives, non-numeric
 up() {
   local n=${1:-1}
-  local path=""
-  for ((i=0; i<n; i++)); do path+="../"; done
-  cd "$path" || return 1
+
+  if [[ ! "$n" =~ ^[1-9][0-9]*$ ]]; then
+    printf 'up: positive integer required (got: %s)\n' "$n" >&2
+    return 1
+  fi
+
+  local up_path=""
+  for ((i=0; i<n; i++)); do up_path+="../"; done
+  cd "$up_path" || return 1
 }
 
 # mkcd <dir>: create directory and cd into it atomically
@@ -35,7 +42,8 @@ nf() {
 # ==============================================================================
 
 # gcom "message": stage all changes and commit with message
-# git rev-parse --git-dir: checks if we're inside a git repo
+# git add -A: stages all changes (including deletions) from repo root,
+# regardless of current working directory
 # git status --porcelain: returns empty string if working tree is clean
 # Fails on clean repo (no empty commits) — requires changes to exist
 gcom() {
@@ -47,16 +55,18 @@ gcom() {
     return 1
   fi
 
-  git add . && git commit -m "$1"
+  git add -A && git commit -m "$1"
 }
 
 # lazyg "message": commit all changes, then optionally push to origin
-# Flow: gcom → prompt for push confirmation with 10s timeout
-# read -t 10: timeout after 10 seconds (no push if idle)
-# read -r: don't interpret backslashes as escape sequences
-# Non-interactive sessions (piped stdin): automatically skip push
+# Flow: gcom → resolve branch → prompt for push confirmation with 10s timeout
+# Returns 0 when commit succeeds (push is optional — skip is not a failure)
+# Returns 1 only when commit fails or not in a git repo
+# Handles unborn branch: first commit creates the branch, resolved post-commit
 lazyg() {
   [[ -z "$1" ]] && { printf 'Usage: lazyg "message"\n' >&2; return 1; }
+
+  gcom "$1" || return 1
 
   local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || {
     printf 'Not a Git repository\n' >&2
@@ -64,17 +74,15 @@ lazyg() {
   }
 
   if [[ "$branch" == "HEAD" ]]; then
-    printf 'Detached HEAD — push skipped. Create or switch to a branch first.\n' >&2
-    return 1
+    printf 'Detached HEAD — push skipped.\n' >&2
+    return 0
   fi
 
-  gcom "$1" || return 1
-
-  [[ ! -t 0 ]] && { printf 'Non-interactive session: push skipped\n' >&2; return 1; }
+  [[ ! -t 0 ]] && { printf 'Non-interactive session: push skipped\n' >&2; return 0; }
 
   read -r -t 10 'confirm?Push to origin/'"$branch"'? [y/N] ' || {
     printf '\nTimeout: push skipped\n' >&2
-    return 1
+    return 0
   }
 
   if [[ "$confirm" =~ ^[sSyY]$ ]]; then
@@ -89,9 +97,9 @@ lazyg() {
 # ==============================================================================
 
 # sedi "s/old/new/g" <file>: safe sed with automatic timestamped backup
-# mktemp: secure temp file (avoids predictable names in shared /tmp)
+# mktemp: creates temp file in target's directory (avoids cross-device mv failure)
+# chmod --reference: preserves original file permissions on modified file
 # trap INT TERM: cleanup temp file on Ctrl+C or kill signal
-# cp + sed + mv: atomic pattern — backup first, then replace via temp file
 # trap - INT TERM: reset trap after successful operation
 sedi() {
   [[ "$#" -ne 2 ]] && { printf 'Usage: sedi "s/old/new/g" <file>\n' >&2; return 1; }
@@ -99,10 +107,10 @@ sedi() {
 
   local pattern="$1" file="$2"
   local backup="${file}.bak.$(date +%Y%m%d%H%M%S)"
-  local tmp=$(mktemp) || return 1
+  local tmp=$(mktemp "${file}.tmp.XXXXXX") || return 1
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && chmod --reference="$file" "$tmp" && mv "$tmp" "$file"
   local rc=$?
   trap - INT TERM
 
