@@ -46,8 +46,8 @@
 
 ## Security Features
 - History filtering: Blocks commands containing TOKEN, SECRET, PASSWORD, API_KEY, PRIVATE_KEY, CREDENTIAL, flag-based credentials, URL-embedded tokens, SSH keys, GPG passphrase commands
-- Sudo protection: sudo-last function blocks recursive sudo, rm -rf /, mkfs, dd of=, chmod -R 777 /
-- All sudo !! executions show warning and require confirmation for dangerous patterns
+- Sudo protection: sudo-last function blocks rm -rf /, mkfs, dd of=, chmod -R 777 /
+- All sudo-last executions show command preview; dangerous patterns are blocked without confirmation; non-dangerous patterns require [y/N] confirmation
 
 ## Important Files
 - `.zshrc` - Main configuration
@@ -137,8 +137,10 @@ Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. F
 | ripgrep | rg | silver-searcher (ag), grep | ripgrep is the fastest. ag is unmaintained. Fedora has both. RIPGREP_CONFIG_PATH allows persistent config. |
 | fd-find | fd | find, plocate | fd respects `.gitignore` by default, which is critical for fzf file searches in git repos (`fzf --preview 'bat --color=always {}'` searches don't want to include `.git/` or `node_modules/`). |
 ## Architecture of Plugin Loading
-- Steps 11-12 are replaced with:
-- These run asynchronously while the user is already at the prompt
+- **cache.zsh** (⑥): Validates version fingerprint → sources cached init output
+- **omz.zsh** (⑦): Oh My Zsh framework + conditional plugins (git, history, zsh-autosuggestions, zsh-syntax-highlighting)
+- **lazy.zsh** (⑧): Optional zsh-defer for deferred plugin loading
+- Plugins load synchronously; cache avoids re-running `zoxide init` and fzf key-bindings on every shell start
 ## Security Considerations
 | Layer | What It Protects | Implementation |
 |-------|-----------------|----------------|
@@ -175,7 +177,7 @@ Zsh configuration optimized for Fedora Linux with Oh My Zsh and Powerlevel10k. F
 - GitHub releases API for all tools (verified via curl)
 - DNF repo queries for Fedora 44 package versions
 - Official README documents:
-- Existing `.zshrc` version 2.3 analysis
+- Existing `.zshrc` version 3.3 analysis
 - PROJECT.md constraints and decisions
 <!-- GSD:stack-end -->
 

@@ -20,7 +20,7 @@ An interactive menu appears — even through a piped curl session. Choose:
 
 ```
 ╔══════════════════════════════════════════╗
-║        Zsh Profile — Fedora v3.2        ║
+║        Zsh Profile — Fedora v3.3        ║
 ╠══════════════════════════════════════════╣
 ║                                          ║
 ║  [1] Install                             ║
