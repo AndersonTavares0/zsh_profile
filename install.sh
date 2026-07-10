@@ -157,33 +157,33 @@ do_uninstall() {
 
   if [[ -L "$HOME/.zshrc" ]]; then
     rm -f "$HOME/.zshrc"
-    printf "  ${GREEN}✓${NC} ~/.zshrc symlink removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zshrc symlink removed\n"; removed=$((removed + 1))
   fi
 
   if [[ -L "$HOME/.zsh_modules" ]]; then
     rm -rf "$HOME/.zsh_modules"
-    printf "  ${GREEN}✓${NC} ~/.zsh_modules symlink removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zsh_modules symlink removed\n"; removed=$((removed + 1))
   fi
 
   if [[ -f "$HOME/.zshrc.zwc" ]]; then
     rm -f "$HOME/.zshrc.zwc"
-    printf "  ${GREEN}✓${NC} ~/.zshrc.zwc bytecode removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zshrc.zwc bytecode removed\n"; removed=$((removed + 1))
   fi
 
   local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh_plugins_init.zsh"
   if [[ -f "$cache" ]]; then
     rm -f "$cache"
-    printf "  ${GREEN}✓${NC} Plugin init cache removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} Plugin init cache removed\n"; removed=$((removed + 1))
   fi
   if [[ -f "${cache}.zwc" ]]; then
     rm -f "${cache}.zwc"
-    printf "  ${GREEN}✓${NC} Plugin cache .zwc removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} Plugin cache .zwc removed\n"; removed=$((removed + 1))
   fi
 
   local p10k_cache="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${USER}.zsh"
   if [[ -f "$p10k_cache" ]]; then
     rm -f "$p10k_cache"
-    printf "  ${GREEN}✓${NC} P10k instant prompt cache removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} P10k instant prompt cache removed\n"; removed=$((removed + 1))
   fi
 
   if [[ $removed -eq 0 ]]; then
