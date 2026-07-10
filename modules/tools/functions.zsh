@@ -110,7 +110,7 @@ sedi() {
   local tmp=$(mktemp "${file}.tmp.XXXXXX") || return 1
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && chmod --reference="$file" "$tmp" && mv "$tmp" "$file"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && { chmod --reference="$file" "$tmp" 2>/dev/null || true; } && mv "$tmp" "$file"
   local rc=$?
   trap - INT TERM
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2059
 # ==============================================================================
 # Zsh Profile — Interactive Installer
 #
@@ -182,7 +183,8 @@ do_set_shell() {
 }
 
 do_quick_install() {
-  local pkg=$(detect_pkg_manager)
+  local pkg
+  pkg=$(detect_pkg_manager)
   printf "${CYAN}Package manager: ${BOLD}$pkg${NC}\n"
   do_install_required "$pkg"
   do_install_optional "$pkg"
@@ -289,10 +291,10 @@ main() {
         printf "\n"
 
         if [[ -t 0 ]]; then
-          printf "${BOLD}Proceed? [Y/n]:${NC} "
+          printf "%sProceed? [Y/n]:%s " "$BOLD" "$NC"
           confirm=$(read_choice)
         else
-          printf "${BOLD}Proceed? [Y/n]:${NC} "
+          printf "%sProceed? [Y/n]:%s " "$BOLD" "$NC"
           confirm=$(read_choice)
         fi
 
