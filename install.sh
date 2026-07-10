@@ -12,6 +12,8 @@ set -euo pipefail
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/zsh_profile"
+STATE_FILE="$STATE_DIR/install.state"
 
 # Resolve repo directory: when piped via curl, clone to ~/.zsh_profile_repo
 REPO_DIR=""
@@ -28,7 +30,9 @@ ensure_repo() {
   fi
   if [[ -d "$REPO_CLONE_DIR/.git" ]]; then
     printf "${CYAN}Updating existing clone...${NC}\n"
-    git -C "$REPO_CLONE_DIR" pull --ff-only 2>/dev/null || true
+    if ! git -C "$REPO_CLONE_DIR" pull --ff-only 2>/dev/null; then
+      printf "${YELLOW}Warning: could not update repo clone — using existing copy${NC}\n"
+    fi
     REPO_DIR="$REPO_CLONE_DIR"
     return 0
   fi
@@ -47,6 +51,22 @@ detect_pkg_manager() {
   else echo "unknown"; fi
 }
 
+write_install_state() {
+  mkdir -p "$STATE_DIR"
+  printf 'installed_at=%s\n' "$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')" > "$STATE_FILE"
+  printf 'repo_dir=%s\n' "$REPO_DIR" >> "$STATE_FILE"
+  if [[ -d "$REPO_DIR/.git" ]]; then
+    printf 'commit=%s\n' "$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" >> "$STATE_FILE"
+  fi
+}
+
+remove_install_state() {
+  if [[ -f "$STATE_FILE" ]]; then
+    rm -f "$STATE_FILE"
+    rmdir "$STATE_DIR" 2>/dev/null || true
+  fi
+}
+
 read_choice() {
   local choice
   # When piped from curl, stdin is the script, not the terminal.
@@ -61,17 +81,30 @@ read_choice() {
 
 # ─── Install ─────────────────────────────────────────────────────────────────
 
-do_install_packages() {
+do_install_required() {
   local pkg="$1"
-  printf "${CYAN}Installing system packages...${NC}\n"
+  printf "${CYAN}Installing required packages (zsh, git)...${NC}\n"
   case "$pkg" in
-    dnf)    sudo dnf install -y zsh git eza fzf zoxide ;;
-    apt)    sudo apt update && sudo apt install -y zsh git eza fzf zoxide ;;
-    pacman) sudo pacman -S --noconfirm zsh git eza fzf zoxide ;;
-    zypper) sudo zypper install -y zsh git eza fzf zoxide ;;
-    *)      printf "${RED}Unknown package manager. Install manually: zsh git eza fzf zoxide${NC}\n"; return 1 ;;
+    dnf)    sudo dnf install -y zsh git ;;
+    apt)    sudo apt update && sudo apt install -y zsh git ;;
+    pacman) sudo pacman -S --noconfirm zsh git ;;
+    zypper) sudo zypper install -y zsh git ;;
+    *)      printf "${RED}Unknown package manager. Install zsh and git manually.${NC}\n"; return 1 ;;
   esac
-  printf "${GREEN}Packages installed.${NC}\n"
+  printf "${GREEN}Required packages installed.${NC}\n"
+}
+
+do_install_optional() {
+  local pkg="$1"
+  local tools="eza fzf zoxide"
+  printf "${CYAN}Installing optional tools (${tools})...${NC}\n"
+  case "$pkg" in
+    dnf)    sudo dnf install -y eza fzf zoxide || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    apt)    sudo apt install -y eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    pacman) sudo pacman -S --noconfirm eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    zypper) sudo zypper install -y eza fzf zoxide 2>/dev/null || printf "${YELLOW}Warning: some optional tools could not be installed${NC}\n" ;;
+    *)      printf "${YELLOW}Unknown package manager — skipping optional tools${NC}\n" ;;
+  esac
 }
 
 do_install_omz() {
@@ -96,17 +129,25 @@ do_install_p10k() {
 
 do_install_plugins() {
   local base="$ZSH_CUSTOM/plugins"
-  declare -A plugin_urls=(
-    [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
-    [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
-    [zsh-defer]="https://github.com/romkatv/zsh-defer"
+  local plugin_names=(
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zsh-defer
   )
-  for plugin in "${!plugin_urls[@]}"; do
-    if [[ -d "$base/$plugin" ]]; then
-      printf "${YELLOW}$plugin already installed.${NC}\n"; continue
+  local plugin_urls=(
+    "https://github.com/zsh-users/zsh-autosuggestions"
+    "https://github.com/zsh-users/zsh-syntax-highlighting"
+    "https://github.com/romkatv/zsh-defer"
+  )
+  local i
+  for ((i=0; i<${#plugin_names[@]}; i++)); do
+    local name="${plugin_names[i]}"
+    local url="${plugin_urls[i]}"
+    if [[ -d "$base/$name" ]]; then
+      printf "${YELLOW}$name already installed.${NC}\n"; continue
     fi
-    printf "${CYAN}Installing $plugin...${NC}\n"
-    git clone "${plugin_urls[$plugin]}" "$base/$plugin"
+    printf "${CYAN}Installing $name...${NC}\n"
+    git clone "$url" "$base/$name"
   done
 }
 
@@ -118,13 +159,16 @@ do_link_config() {
   for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
     if [[ -e "$f" && ! -L "$f" ]]; then
       local bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
-      cp -r "$f" "$bak" 2>/dev/null || true
-      printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+      if cp -r "$f" "$bak" 2>/dev/null; then
+        printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+      else
+        printf "  ${RED}Warning: could not backup $f${NC}\n"
+      fi
     fi
   done
 
   ln -sf "$REPO_DIR/.zshrc"       "$HOME/.zshrc"
-  ln -sfn "$REPO_DIR/modules"     "$HOME/.zsh_modules"
+  ln -sf "$REPO_DIR/modules"     "$HOME/.zsh_modules"
   printf "${GREEN}~/.zshrc → repo .zshrc${NC}\n"
   printf "${GREEN}~/.zsh_modules → repo modules/${NC}\n"
 }
@@ -140,12 +184,14 @@ do_set_shell() {
 do_quick_install() {
   local pkg=$(detect_pkg_manager)
   printf "${CYAN}Package manager: ${BOLD}$pkg${NC}\n"
-  do_install_packages "$pkg"
+  do_install_required "$pkg"
+  do_install_optional "$pkg"
   do_install_omz
   do_install_p10k
   do_install_plugins
   do_link_config
   do_set_shell
+  write_install_state
 }
 
 # ─── Uninstall ───────────────────────────────────────────────────────────────
@@ -157,33 +203,33 @@ do_uninstall() {
 
   if [[ -L "$HOME/.zshrc" ]]; then
     rm -f "$HOME/.zshrc"
-    printf "  ${GREEN}✓${NC} ~/.zshrc symlink removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zshrc symlink removed\n"; removed=$((removed + 1))
   fi
 
   if [[ -L "$HOME/.zsh_modules" ]]; then
     rm -rf "$HOME/.zsh_modules"
-    printf "  ${GREEN}✓${NC} ~/.zsh_modules symlink removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zsh_modules symlink removed\n"; removed=$((removed + 1))
   fi
 
   if [[ -f "$HOME/.zshrc.zwc" ]]; then
     rm -f "$HOME/.zshrc.zwc"
-    printf "  ${GREEN}✓${NC} ~/.zshrc.zwc bytecode removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} ~/.zshrc.zwc bytecode removed\n"; removed=$((removed + 1))
   fi
 
   local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh_plugins_init.zsh"
   if [[ -f "$cache" ]]; then
     rm -f "$cache"
-    printf "  ${GREEN}✓${NC} Plugin init cache removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} Plugin init cache removed\n"; removed=$((removed + 1))
   fi
   if [[ -f "${cache}.zwc" ]]; then
     rm -f "${cache}.zwc"
-    printf "  ${GREEN}✓${NC} Plugin cache .zwc removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} Plugin cache .zwc removed\n"; removed=$((removed + 1))
   fi
 
   local p10k_cache="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${USER}.zsh"
   if [[ -f "$p10k_cache" ]]; then
     rm -f "$p10k_cache"
-    printf "  ${GREEN}✓${NC} P10k instant prompt cache removed\n"; ((removed++))
+    printf "  ${GREEN}✓${NC} P10k instant prompt cache removed\n"; removed=$((removed + 1))
   fi
 
   if [[ $removed -eq 0 ]]; then
@@ -191,6 +237,7 @@ do_uninstall() {
   else
     printf "\n${GREEN}Uninstall complete (${removed} items cleaned).${NC}\n"
     printf "Packages (zsh, git, eza, fzf, zoxide) and OMZ/P10k are preserved.\n"
+    remove_install_state
   fi
 }
 
