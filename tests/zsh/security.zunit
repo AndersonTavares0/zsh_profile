@@ -1,0 +1,60 @@
+#!/usr/bin/env zunit
+
+@setup {
+  ZUNIT_HOME=$(mktemp -d)
+  HOME="$ZUNIT_HOME"
+  HISTFILE="$HOME/.zsh_history"
+
+  source "$ZSH_PROFILE_ROOT/modules/core/security.zsh" 2>/dev/null
+}
+
+@teardown {
+  rm -rf "$ZUNIT_HOME"
+}
+
+@test 'zshaddhistory function is defined after sourcing security.zsh' {
+  run typeset -f zshaddhistory
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'sudo function is defined (shadowing external binary)' {
+  run typeset -f sudo
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'command containing TOKEN=assignment is blocked from history' {
+  run zshaddhistory 'TOKEN=abc123 curl https://example.com'
+
+  assert $state equals 1
+}
+
+@test 'command containing PASSWORD=assignment is blocked from history' {
+  run zshaddhistory 'PASSWORD=secret123 mysql -u root'
+
+  assert $state equals 1
+}
+
+@test 'normal command without credentials is allowed in history' {
+  run zshaddhistory 'ls -la /tmp'
+
+  assert $state equals 0
+}
+
+@test 'command longer than 4096 chars is blocked from history' {
+  run zshaddhistory $(python3 -c 'print("x"*4097)' 2>/dev/null || printf 'x%.0s' {1..4097})
+
+  assert $state equals 1
+}
+
+@test 'sudo function blocks rm -rf / via !! detection' {
+  fc -R =(print 'rm -rf /' | cat)
+
+  run sudo '!!'
+
+  assert $state equals 1
+  assert $output matches 'Blocked by security'
+}

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export ZSH_PROFILE_ROOT="$ROOT_DIR"
 DEPS_ROOT="${ZSH_PROFILE_TEST_DEPS:-${XDG_CACHE_HOME:-$HOME/.cache}/zsh-profile/test-deps}"
 ZUNIT_BIN="$DEPS_ROOT/zunit-0.8.2/zunit"
 BATS_BIN="$DEPS_ROOT/bats-core-1.13.0/bin/bats"
