@@ -1,0 +1,44 @@
+#!/usr/bin/env zunit
+
+@setup {
+  ZUNIT_HOME=$(mktemp -d)
+  HOME="$ZUNIT_HOME"
+  unset XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME
+
+  source "$ZSH_PROFILE_ROOT/modules/core/environment.zsh" 2>/dev/null
+}
+
+@teardown {
+  rm -rf "$ZUNIT_HOME"
+}
+
+@test 'XDG_CACHE_HOME is defined after sourcing environment.zsh' {
+  run print "$XDG_CACHE_HOME"
+
+  assert $state equals 0
+  assert $output is_not_empty
+}
+
+@test 'module environment.zsh sources without errors' {
+  run source "$ZSH_PROFILE_ROOT/modules/core/environment.zsh" 2>/dev/null
+
+  assert $state equals 0
+}
+
+@test 'XDG_CACHE_HOME defaults to HOME/.cache when not pre-set' {
+  expected="$ZUNIT_HOME/.cache"
+
+  assert "$XDG_CACHE_HOME" same_as "$expected"
+}
+
+@test 'XDG_CONFIG_HOME defaults to HOME/.config when not pre-set' {
+  expected="$ZUNIT_HOME/.config"
+
+  assert "$XDG_CONFIG_HOME" same_as "$expected"
+}
+
+@test 'XDG_DATA_HOME defaults to HOME/.local/share when not pre-set' {
+  expected="$ZUNIT_HOME/.local/share"
+
+  assert "$XDG_DATA_HOME" same_as "$expected"
+}
