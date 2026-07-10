@@ -108,11 +108,15 @@ sedi() {
   local pattern="$1" file="$2"
   local backup="${file}.bak.$(date +%Y%m%d%H%M%S)"
   local tmp=$(mktemp "${file}.tmp.XXXXXX") || return 1
+  local orig_mode
+  orig_mode=$(stat -c '%a' "$file" 2>/dev/null || stat -f '%Lp' "$file" 2>/dev/null)
   trap "rm -f '$tmp'" INT TERM
 
-  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && chmod --reference="$file" "$tmp" && mv "$tmp" "$file"
+  cp "$file" "$backup" && sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
   local rc=$?
   trap - INT TERM
+
+  [[ $rc -eq 0 && -n "$orig_mode" ]] && chmod "$orig_mode" "$file" 2>/dev/null
 
   [[ $rc -eq 0 ]] && printf 'Modified. Backup: %s\n' "$backup"
   return $rc
