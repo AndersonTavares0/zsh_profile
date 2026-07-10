@@ -4,11 +4,18 @@
 
 # up [n]: go up n directory levels (default: 1)
 # up 3 = cd ../../..  (one call, no chaining needed)
+# Validates n as a positive integer (1+); rejects 0, negatives, non-numeric
 up() {
   local n=${1:-1}
-  local path=""
-  for ((i=0; i<n; i++)); do path+="../"; done
-  cd "$path" || return 1
+
+  if [[ ! "$n" =~ ^[1-9][0-9]*$ ]]; then
+    printf 'up: positive integer required (got: %s)\n' "$n" >&2
+    return 1
+  fi
+
+  local up_path=""
+  for ((i=0; i<n; i++)); do up_path+="../"; done
+  cd "$up_path" || return 1
 }
 
 # mkcd <dir>: create directory and cd into it atomically

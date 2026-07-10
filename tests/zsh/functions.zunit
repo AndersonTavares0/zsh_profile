@@ -80,6 +80,48 @@
   assert $state equals 0
 }
 
+@test 'up with no argument goes up one directory' {
+  start="$PWD"
+  mkdir -p "$ZUNIT_HOME/a/b/c"
+  cd "$ZUNIT_HOME/a/b/c"
+
+  up
+  assert "$PWD" same_as "$ZUNIT_HOME/a/b"
+  cd "$start"
+}
+
+@test 'up with positive integer goes up N levels' {
+  start="$PWD"
+  mkdir -p "$ZUNIT_HOME/x/y/z"
+  cd "$ZUNIT_HOME/x/y/z"
+
+  up 2
+
+  assert "$PWD" same_as "$ZUNIT_HOME/x"
+  cd "$start"
+}
+
+@test 'up with zero prints error and returns 1' {
+  run up 0
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
+@test 'up with negative number prints error and returns 1' {
+  run up -3
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
+@test 'up with non-numeric argument prints error and returns 1' {
+  run up abc
+
+  assert $state equals 1
+  assert $output matches 'positive integer'
+}
+
 @test 'sedi creates temp file in target directory, not /tmp' {
   workdir="$ZUNIT_HOME/sedi-test"
   mkdir -p "$workdir"
