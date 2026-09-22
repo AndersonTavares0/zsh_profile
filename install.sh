@@ -169,8 +169,19 @@ do_link_config() {
     fi
   done
 
-  ln -sf "$REPO_DIR/.zshrc"       "$HOME/.zshrc"
-  ln -sf "$REPO_DIR/modules"     "$HOME/.zsh_modules"
+  # Remove pre-existing symlinks FIRST: `ln -sf` dereferences a symlink that
+  # points at a directory and creates the new link INSIDE it, producing a
+  # recursive self-referencing symlink (~/.zsh_modules → .../modules, then
+  # modules/.zsh_modules → ...) on every re-install. See issue #34.
+  for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
+    if [[ -L "$f" ]]; then
+      rm -f "$f"
+      printf "  ${YELLOW}Removed old symlink: $f${NC}\n"
+    fi
+  done
+
+  ln -s "$REPO_DIR/.zshrc"   "$HOME/.zshrc"
+  ln -s "$REPO_DIR/modules"  "$HOME/.zsh_modules"
   printf "${GREEN}~/.zshrc → repo .zshrc${NC}\n"
   printf "${GREEN}~/.zsh_modules → repo modules/${NC}\n"
 }
