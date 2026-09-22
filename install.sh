@@ -128,6 +128,33 @@ do_install_p10k() {
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$dest"
 }
 
+do_p10k_config() {
+  # Bootstrap/validate ~/.p10k.zsh (issue #33): without it the theme loads
+  # with a generic prompt and no explanation. Seed from p10k's shipped lean
+  # config when missing; never overwrite an existing config.
+  local cfg="$HOME/.p10k.zsh"
+  local default_cfg="$ZSH_CUSTOM/themes/powerlevel10k/config/p10k-lean.zsh"
+
+  if [[ -f "$cfg" ]]; then
+    if [[ -s "$cfg" ]]; then
+      printf "${GREEN}Powerlevel10k config present (~/.p10k.zsh).${NC}\n"
+    else
+      printf "${YELLOW}~/.p10k.zsh exists but is empty — re-run 'p10k configure'.${NC}\n"
+    fi
+    return 0
+  fi
+
+  if [[ -f "$default_cfg" ]]; then
+    if cp "$default_cfg" "$cfg"; then
+      printf "${GREEN}Created ~/.p10k.zsh from p10k default (lean). Run 'p10k configure' to customize.${NC}\n"
+    else
+      printf "${YELLOW}Could not write ~/.p10k.zsh — run 'p10k configure' manually.${NC}\n"
+    fi
+  else
+    printf "${YELLOW}No ~/.p10k.zsh and p10k default config not found — run 'p10k configure' on first shell start.${NC}\n"
+  fi
+}
+
 do_install_plugins() {
   local base="$ZSH_CUSTOM/plugins"
   local plugin_names=(
@@ -191,6 +218,7 @@ do_quick_install() {
   do_install_optional "$pkg"
   do_install_omz
   do_install_p10k
+  do_p10k_config
   do_install_plugins
   do_link_config
   do_set_shell
