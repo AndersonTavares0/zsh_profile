@@ -49,3 +49,10 @@ if [[ -n "$_M" ]]; then
 fi
 
 unset _M
+export PATH="$HOME/.local/bin:$PATH"
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/anderson/.local/bin:$PATH"
+
+export PATH=$PATH:/home/anderson/.spicetify
