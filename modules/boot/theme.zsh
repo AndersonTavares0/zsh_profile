@@ -1,9 +1,13 @@
 # ==============================================================================
-# Powerlevel10k — Theme Loading
+# Theme Loading — Powerlevel10k (default) or Oh My Zsh theme
 # MUST be sourced at the very end of .zshrc (after all plugins, aliases, functions)
-# Order: ~/powerlevel10k → OMZ custom themes → fallback (whichever found first)
+# When $ZSH_THEME is set (e.g. exported in ~/.zshenv), OMZ already loaded it
+# at plugins/omz.zsh time, so p10k is skipped to avoid overriding the prompt.
+# Order when p10k active: ~/powerlevel10k → OMZ custom themes → fallback.
 # ==============================================================================
-if [[ -f ~/powerlevel10k/powerlevel10k.zsh-theme ]]; then
+if [[ -n "$ZSH_THEME" ]]; then
+  print -- "zsh_profile: using Oh My Zsh theme '$ZSH_THEME' — p10k skipped"
+elif [[ -f ~/powerlevel10k/powerlevel10k.zsh-theme ]]; then
   source ~/powerlevel10k/powerlevel10k.zsh-theme
 elif [[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k/powerlevel10k.zsh-theme ]]; then
   source ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k/powerlevel10k.zsh-theme
