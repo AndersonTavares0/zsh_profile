@@ -6,7 +6,7 @@
 # Order when p10k active: ~/powerlevel10k → OMZ custom themes → fallback.
 # ==============================================================================
 if [[ -n "$ZSH_THEME" ]]; then
-  print -- "zsh_profile: using Oh My Zsh theme '$ZSH_THEME' — p10k skipped"
+  : # Oh My Zsh loaded the selected theme; do not override it with p10k.
 elif [[ -f ~/powerlevel10k/powerlevel10k.zsh-theme ]]; then
   source ~/powerlevel10k/powerlevel10k.zsh-theme
 elif [[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k/powerlevel10k.zsh-theme ]]; then
