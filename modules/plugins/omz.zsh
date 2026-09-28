@@ -1,7 +1,12 @@
 # ==============================================================================
 # Oh My Zsh — Framework Configuration
 # ZSH: path to Oh My Zsh installation directory
-# ZSH_THEME: empty string — Powerlevel10k is loaded separately (boot/theme.zsh)
+# ZSH_THEME: preserved when the user exports it (e.g. in ~/.zshenv, which
+# OMZ reads at `source oh-my-zsh.sh` time); empty string keeps the default
+# behavior — Powerlevel10k loaded separately (boot/theme.zsh).
+# To use a built-in or $ZSH_CUSTOM theme instead of p10k:
+#   export ZSH_THEME="agnoster"   # in ~/.zshenv (before .zshrc)
+# boot/theme.zsh then skips p10k automatically.
 #
 # Performance:
 #   ZSH_DISABLE_COMPFIX=true — skips compaudit (~7ms saved per shell start).
@@ -11,7 +16,8 @@
 #     zstyle is the recommended OMZ method (survives framework internal changes).
 # ==============================================================================
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME=""
+# Preserve a user-exported theme (e.g. from ~/.zshenv); default empty → p10k.
+ZSH_THEME="${ZSH_THEME:-}"
 ZSH_DISABLE_COMPFIX=true
 zstyle ':omz:update' mode disabled
 
