@@ -203,11 +203,32 @@ do_link_config() {
 }
 
 do_set_shell() {
-  if [[ "$SHELL" == *"/zsh" ]]; then
-    printf "${YELLOW}Zsh already default shell.${NC}\n"; return 0
+  # Verify against /etc/passwd (getent), NOT $SHELL: the environment keeps the
+  # shell from login time, so a chsh done in another terminal is invisible here
+  # and $SHELL can report /bin/bash even when the account is already on zsh —
+  # or vice versa. See issue #32.
+  local zsh_path current_shell
+  zsh_path="$(command -v zsh)"
+  current_shell="$(getent passwd "${USER:-$(id -un)}" | cut -d: -f7)"
+
+  if [[ "$current_shell" == */zsh ]]; then
+    printf "${YELLOW}Zsh already default shell (${current_shell}).${NC}\n"; return 0
   fi
+
   printf "${CYAN}Setting Zsh as default shell...${NC}\n"
-  chsh -s "$(command -v zsh)"
+  if ! chsh -s "$zsh_path"; then
+    printf "${RED}chsh failed or was cancelled — default shell unchanged.${NC}\n"
+    printf "${YELLOW}Set it manually when convenient: chsh -s ${zsh_path}${NC}\n"
+    return 0  # keep install going (set -e): the user was told exactly what to run
+  fi
+
+  # Post-condition: confirm the change actually landed in /etc/passwd
+  current_shell="$(getent passwd "${USER:-$(id -un)}" | cut -d: -f7)"
+  if [[ "$current_shell" == */zsh ]]; then
+    printf "${GREEN}Default shell verified: ${current_shell}${NC}\n"
+  else
+    printf "${YELLOW}/etc/passwd still shows ${current_shell} — log out and back in, or run: chsh -s ${zsh_path}${NC}\n"
+  fi
 }
 
 do_quick_install() {
