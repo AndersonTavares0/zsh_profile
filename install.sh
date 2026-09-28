@@ -11,7 +11,7 @@
 # ==============================================================================
 set -euo pipefail
 
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; YELLOW=$'\033[0;33m'; CYAN=$'\033[0;36m'; BOLD=$'\033[1m'; NC=$'\033[0m'
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/zsh_profile"
 STATE_FILE="$STATE_DIR/install.state"
@@ -183,27 +183,29 @@ do_link_config() {
   ensure_repo
   printf "${CYAN}Linking config...${NC}\n"
 
-  # Backup existing files before symlinking (never overwrite without copy)
-  for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
-    if [[ -e "$f" && ! -L "$f" ]]; then
-      local bak
-      bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
-      if cp -r "$f" "$bak" 2>/dev/null; then
-        printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
-      else
-        printf "  ${RED}Warning: could not backup $f${NC}\n"
-      fi
-    fi
-  done
-
-  # Remove pre-existing symlinks FIRST: `ln -sf` dereferences a symlink that
-  # points at a directory and creates the new link INSIDE it, producing a
-  # recursive self-referencing symlink (~/.zsh_modules → .../modules, then
-  # modules/.zsh_modules → ...) on every re-install. See issue #34.
+  # Clear existing files before symlinking: move regular files to a
+  # timestamped backup (never overwrite without copy) and remove old
+  # symlinks. Both steps must free the path, otherwise `ln -s` below
+  # fails with "File exists" and `set -e` aborts the whole install
+  # (regular ~/.zshrc left by the Oh My Zsh template hits this).
+  # Symlinks are removed (not backed up) FIRST: `ln -sf` dereferences a
+  # symlink that points at a directory and creates the new link INSIDE it,
+  # producing a recursive self-referencing symlink (~/.zsh_modules → ...
+  # /modules, then modules/.zsh_modules → ...) on every re-install.
+  # See issue #34.
   for f in "$HOME/.zshrc" "$HOME/.zsh_modules"; do
     if [[ -L "$f" ]]; then
       rm -f "$f"
       printf "  ${YELLOW}Removed old symlink: $f${NC}\n"
+    elif [[ -e "$f" ]]; then
+      local bak
+      bak="${f}.bak.$(date +%Y%m%d_%H%M%S)"
+      if mv "$f" "$bak" 2>/dev/null; then
+        printf "  ${YELLOW}Backup: $f → $bak${NC}\n"
+      else
+        printf "  ${RED}Warning: could not backup $f${NC}\n"
+        return 1
+      fi
     fi
   done
 
